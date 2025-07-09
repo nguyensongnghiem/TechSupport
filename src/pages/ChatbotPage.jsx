@@ -10,12 +10,11 @@ function generateSessionId() {
 
 // Lấy URL của webhook từ biến môi trường
 // Cú pháp sẽ khác nhau tùy thuộc vào công cụ build của bạn
-const CHATBOT_WEBHOOK_URL = import.meta.env.VITE_CHATBOT_WEBHOOK_URL 
+const CHATBOT_WEBHOOK_URL = import.meta.env.VITE_CHATBOT_WEBHOOK_URL;
 console.log("CHATBOT_WEBHOOK_URL:", CHATBOT_WEBHOOK_URL);
 // Bạn nên sử dụng một URL dự phòng hợp lý hoặc một thông báo lỗi nếu URL là bắt buộc.
 // Ví dụ: console.error("CHATBOT_WEBHOOK_URL is not defined!");
 // Hoặc throw new Error("CHATBOT_WEBHOOK_URL environment variable is missing.");
-
 
 function ChatbotPage() {
   const [messages, setMessages] = useState([]);
@@ -31,6 +30,7 @@ function ChatbotPage() {
   }, [messages, isLoading]);
 
   // Tạo hoặc lấy sessionId từ sessionStorage khi component mount
+  // Thêm lời chào của bot
   useEffect(() => {
     let storedId = sessionStorage.getItem("chatbotSessionId");
     if (!storedId) {
@@ -38,6 +38,14 @@ function ChatbotPage() {
       sessionStorage.setItem("chatbotSessionId", storedId);
     }
     setSessionId(storedId);
+
+    // Add initial greeting from the bot
+    setMessages([
+      {
+        sender: "bot",
+        text: "Chào bạn! Tôi là một trợ lý AI hỗ trợ kỹ thuật 24/7 với các vấn đề về kỹ thuật thiết bị tại Cảng Đà Nẵng. Tôi có thể giúp gì cho bạn hôm nay?",
+      },
+    ]);
   }, []);
 
   const sendMessage = async () => {
@@ -108,7 +116,9 @@ function ChatbotPage() {
     <div className="flex flex-col items-center bg-gray-50 h-[calc(100vh-56px)] pt-4 sm:pt-8 pb-4">
       <div className="w-[95%] max-w-xl sm:max-w-2xl lg:max-w-3xl bg-white rounded-xl shadow-2xl p-4 sm:p-6 flex flex-col h-full">
         <div className="flex items-center justify-between pb-3 border-b border-gray-200 mb-3 flex-shrink-0">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Hỗ trợ kỹ thuật 24/7</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+            Hỗ trợ kỹ thuật 24/7
+          </h1>
           <svg
             className="w-7 h-7 sm:w-8 sm:h-8 text-blue-500 flex-shrink-0"
             fill="none"
