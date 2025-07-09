@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import "./App.css";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 import {
   BrowserRouter,
   Route,
@@ -30,10 +31,9 @@ function App() {
             <Outlet />
           </main>
         </div>
-        {/* <footer className="bg-gray-100 p-2">Footer</footer> */}
+        <Footer />
       </div>
-      <ToastContainer />
-            
+      <ToastContainer />            
     </>
   );
 }

@@ -1,11 +1,21 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
-import { v4 as uuidv4 } from "uuid"; // Đảm bảo bạn đã cài đặt thư viện 'uuid'
+import { v4 as uuidv4 } from "uuid";
+import { FaPaperPlane } from "react-icons/fa";
 
 // Hàm tạo sessionId ngẫu nhiên (UUID v4)
 function generateSessionId() {
   return uuidv4();
 }
+
+// Lấy URL của webhook từ biến môi trường
+// Cú pháp sẽ khác nhau tùy thuộc vào công cụ build của bạn
+const CHATBOT_WEBHOOK_URL = import.meta.env.VITE_CHATBOT_WEBHOOK_URL 
+console.log("CHATBOT_WEBHOOK_URL:", CHATBOT_WEBHOOK_URL);
+// Bạn nên sử dụng một URL dự phòng hợp lý hoặc một thông báo lỗi nếu URL là bắt buộc.
+// Ví dụ: console.error("CHATBOT_WEBHOOK_URL is not defined!");
+// Hoặc throw new Error("CHATBOT_WEBHOOK_URL environment variable is missing.");
+
 
 function ChatbotPage() {
   const [messages, setMessages] = useState([]);
@@ -15,6 +25,7 @@ function ChatbotPage() {
 
   const messagesEndRef = useRef(null);
 
+  // Cuộn xuống cuối tin nhắn khi có tin nhắn mới hoặc trạng thái tải thay đổi
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
@@ -30,7 +41,7 @@ function ChatbotPage() {
   }, []);
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
 
     const userMsg = { sender: "user", text: input };
     setMessages((msgs) => [...msgs, userMsg]);
@@ -48,8 +59,9 @@ function ChatbotPage() {
     };
 
     try {
+      // SỬ DỤNG BIẾN MÔI TRƯỜNG Ở ĐÂY
       const res = await fetch(
-        "https://digithub.io.vn/webhook/2470f88a-8804-4b81-a421-69fe10b9c3e4/chat",
+        CHATBOT_WEBHOOK_URL, // <-- Đã thay thế URL nhúng cứng bằng biến môi trường
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -93,14 +105,8 @@ function ChatbotPage() {
   };
 
   return (
-    // Outer container:
-    // Giả định header cao 56px (pt-14) và cố định. Điều chỉnh nếu khác.
-    // Loại bỏ justify-center vì chatbot sẽ chiếm toàn bộ chiều cao có thể.
-    <div className="flex flex-col items-center bg-gray-50 h-[calc(100vh-56px)] pt-14">
-      {/* Main chatbot box */}
-      {/* Thay đổi max-w-xl thành max-w-2xl hoặc 3xl để rộng hơn trên màn hình lớn */}
-      <div className="w-full max-w-xl sm:max-w-2xl lg:max-w-3xl bg-white rounded-xl shadow-2xl p-4 sm:p-6 flex flex-col h-full"> {/* <--- ĐIỀU CHỈNH CHÍNH */}
-        {/* Chatbot Header */}
+    <div className="flex flex-col items-center bg-gray-50 h-[calc(100vh-56px)] pt-4 sm:pt-8 pb-4">
+      <div className="w-[95%] max-w-xl sm:max-w-2xl lg:max-w-3xl bg-white rounded-xl shadow-2xl p-4 sm:p-6 flex flex-col h-full">
         <div className="flex items-center justify-between pb-3 border-b border-gray-200 mb-3 flex-shrink-0">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Hỗ trợ kỹ thuật 24/7</h1>
           <svg
@@ -119,7 +125,6 @@ function ChatbotPage() {
           </svg>
         </div>
 
-        {/* Message Area: flex-1 for growth, overflow-y-auto for scrolling */}
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
           {messages.length === 0 && !isLoading && (
             <div className="flex items-center justify-center h-full text-gray-500 italic">
@@ -134,21 +139,18 @@ function ChatbotPage() {
               }`}
             >
               <div
-                // ĐIỀU CHỈNH CHÍNH Ở ĐÂY:
-                // - Đặt w-full để tin nhắn luôn chiếm 100% chiều ngang của flex container cha
-                // - Đảm bảo tin nhắn có khoảng cách với mép màn hình đối diện bằng cách sử dụng margin tự động
-                className={`max-w-[90%] px-4 py-2 rounded-lg shadow-md ${ // <--- ĐIỀU CHỈNH NÀY
+                className={`max-w-[85%] px-3 py-2 sm:px-4 sm:py-2 rounded-lg shadow-md ${
                   msg.sender === "user"
-                    ? "bg-blue-600 text-white rounded-br-none ml-auto mr-0"
-                    : "bg-gray-200 text-gray-800 rounded-bl-none mr-auto ml-0"
+                    ? "bg-blue-600 text-white rounded-br-none ml-auto"
+                    : "bg-gray-200 text-gray-800 rounded-bl-none mr-auto"
                 }`}
               >
                 {msg.sender === "bot" ? (
-                  <div className="prose prose-sm max-w-none">
+                  <div className="prose prose-sm max-w-none text-sm sm:text-base">
                     <ReactMarkdown>{msg.text}</ReactMarkdown>
                   </div>
                 ) : (
-                  msg.text
+                  <span className="text-sm sm:text-base">{msg.text}</span>
                 )}
               </div>
             </div>
@@ -156,9 +158,9 @@ function ChatbotPage() {
 
           {isLoading && (
             <div className="flex items-center justify-start mb-4">
-              <div className="flex items-center px-4 py-2 rounded-lg bg-gray-200 text-gray-700 shadow-md rounded-bl-none">
+              <div className="flex items-center px-3 py-2 rounded-lg bg-gray-200 text-gray-700 shadow-md rounded-bl-none text-sm sm:text-base">
                 <svg
-                  className="animate-spin h-5 w-5 mr-3 text-blue-500"
+                  className="animate-spin h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 text-blue-500"
                   viewBox="0 0 24 24"
                 >
                   <circle
@@ -183,10 +185,9 @@ function ChatbotPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area: flex-shrink-0 to maintain height */}
         <div className="flex gap-2 sm:gap-3 pt-3 border-t border-gray-200 flex-shrink-0">
           <input
-            className="flex-1 border border-gray-300 rounded-md px-3 py-2 sm:px-5 sm:py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 placeholder-gray-400 text-sm sm:text-base"
+            className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm sm:px-4 sm:py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 placeholder-gray-400"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
@@ -194,7 +195,7 @@ function ChatbotPage() {
             disabled={isLoading}
           />
           <button
-            className={`bg-blue-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-md font-semibold shadow-lg transition duration-300 ease-in-out text-sm sm:text-base ${
+            className={`flex items-center justify-center bg-blue-600 text-white px-3 py-2 sm:px-5 sm:py-2.5 rounded-md font-semibold shadow-lg transition duration-300 ease-in-out text-sm sm:text-base ${
               isLoading
                 ? "opacity-60 cursor-not-allowed"
                 : "hover:bg-blue-700 transform hover:scale-105"
@@ -223,7 +224,10 @@ function ChatbotPage() {
                 />
               </svg>
             ) : (
-              "Gửi"
+              <>
+                <FaPaperPlane className="h-4 w-4 mr-1 sm:mr-2" />
+                Gửi
+              </>
             )}
           </button>
         </div>

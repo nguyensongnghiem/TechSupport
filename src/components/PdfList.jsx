@@ -10,20 +10,20 @@ function PdfList({ pdfs, onSelectPdf }) {
   );
 
   return (
-    <div className="w-full h-full flex flex-col"> {/* Đảm bảo component chiếm hết chiều cao */}
+    <div className="w-full h-full flex flex-col py-2"> {/* Đảm bảo component chiếm hết chiều cao */}
       {/* Ô tìm kiếm */}
       <Input
         type="text"
         label="Tìm kiếm tài liệu..." // Nhãn rõ ràng hơn
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="mb-4" // Khoảng cách dưới
+        className="mb-6" // Khoảng cách dưới
         color="blue-gray" // Màu sắc cho input
-        size="lg" // Kích thước input lớn hơn
+        size="md" // Kích thước input lớn hơn
       />
 
       {/* Danh sách tài liệu */}
-      <List className="w-full flex-1 p-0 overflow-y-auto custom-scrollbar"> {/* Thay đổi max-h thành flex-1 để chiếm hết không gian còn lại */}
+      <List className="w-full flex-1 py-2 overflow-y-auto custom-scrollbar"> {/* Thay đổi max-h thành flex-1 để chiếm hết không gian còn lại */}
         {filteredPdfs.length > 0 ? (
           filteredPdfs.map((pdf) => (
             <ListItem
@@ -35,7 +35,7 @@ function PdfList({ pdfs, onSelectPdf }) {
               onClick={() => onSelectPdf(pdf.url)}
             >
               <div className="flex items-center gap-3">
-                <FaFilePdf className="text-red-500 text-lg" /> {/* Icon PDF nổi bật */}
+                <FaFilePdf className="text-gray-600 text-lg" /> {/* Icon PDF nổi bật */}
                 <Typography variant="paragraph" color="blue-gray" className="font-medium">
                   {pdf.name}
                 </Typography>

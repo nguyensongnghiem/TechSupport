@@ -6,8 +6,6 @@ import { IconButton, Typography, Input, Button } from "@material-tailwind/react"
 import {
   FaSearchMinus,
   FaSearchPlus,
-  FaSearch,
-  FaTimes,
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
@@ -20,33 +18,50 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 
 function PdfViewer({ pdfUrl }) {
   const [numPages, setNumPages] = useState(null);
+  const [currentPageNum, setCurrentPageNum] = useState(1);
   const [scale, setScale] = useState(1.0);
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
-  const [isSearching, setIsSearching] = useState(false);
   const [gotoPageInput, setGotoPageInput] = useState("");
 
   useEffect(() => {
     setScale(1.0);
-    setSearchTerm("");
-    setSearchResults([]);
-    setCurrentMatchIndex(-1);
-    setIsSearching(false);
     setGotoPageInput("");
+    setCurrentPageNum(1);
   }, [pdfUrl]);
 
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
+    setCurrentPageNum(1);
   }
 
   const zoomOut = useCallback(() => setScale((s) => Math.max(s - 0.2, 0.4)), []);
   const zoomIn = useCallback(() => setScale((s) => Math.min(s + 0.2, 3.0)), []);
 
-  const handleGoToPage = () => {
+  const goToNextPage = useCallback(() => {
+    if (currentPageNum < numPages) {
+      const nextPage = currentPageNum + 1;
+      setCurrentPageNum(nextPage);
+      const pageElement = document.getElementById(`pdf-page-${nextPage}`);
+      if (pageElement) {
+        pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }, [currentPageNum, numPages]);
+
+  const goToPrevPage = useCallback(() => {
+    if (currentPageNum > 1) {
+      const prevPage = currentPageNum - 1;
+      setCurrentPageNum(prevPage);
+      const pageElement = document.getElementById(`pdf-page-${prevPage}`);
+      if (pageElement) {
+        pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }, [currentPageNum]);
+
+  const handleGoToPage = useCallback(() => {
     const page = parseInt(gotoPageInput, 10);
     if (page > 0 && page <= numPages) {
+      setCurrentPageNum(page);
       const pageElement = document.getElementById(`pdf-page-${page}`);
       if (pageElement) {
         pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -55,204 +70,148 @@ function PdfViewer({ pdfUrl }) {
     } else {
       alert(`Vui lòng nhập số trang hợp lệ từ 1 đến ${numPages || "?"}.`);
     }
-  };
+  }, [gotoPageInput, numPages]);
 
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) {
-      setSearchResults([]);
-      setCurrentMatchIndex(-1);
-      return;
-    }
+  const handlePageScroll = useCallback(() => {
+    const pages = document.querySelectorAll('[id^="pdf-page-"]');
+    if (!pages.length) return; // Không có trang nào để xử lý
 
-    setIsSearching(true);
-    setSearchResults([]);
-    setCurrentMatchIndex(-1);
+    let currentVisiblePage = 1;
+    let closestToTop = Infinity;
 
-    let foundResults = [];
-    for (let i = 1; i <= numPages; i++) {
-      if (
-        `Content on page ${i} with ${searchTerm}`
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
-      ) {
-        foundResults.push({ page: i, match: `match on page ${i}` });
-        if (foundResults.length >= 5) break;
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      const rect = page.getBoundingClientRect();
+
+      // Kiểm tra xem trang có đang trong viewport không
+      if (rect.top <= window.innerHeight && rect.bottom >= 0) {
+        // Tính toán mức độ hiển thị của trang trong viewport
+        const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+        const pageHeight = rect.height;
+
+        // Nếu trang hiển thị hơn 50% hoặc là trang gần đỉnh nhất
+        if (visibleHeight > pageHeight * 0.5 || rect.top < closestToTop) {
+            currentVisiblePage = i + 1;
+            closestToTop = rect.top;
+        }
       }
     }
-
-    if (foundResults.length > 0) {
-      setSearchResults(foundResults);
-      setCurrentMatchIndex(0);
-      const pageElement = document.getElementById(
-        `pdf-page-${foundResults[0].page}`
-      );
-      if (pageElement) {
-        pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    } else {
-      alert("Không tìm thấy kết quả nào.");
+    
+    // Chỉ cập nhật nếu trang đã thay đổi để tránh re-render không cần thiết
+    if (currentVisiblePage !== currentPageNum) {
+      setCurrentPageNum(currentVisiblePage);
     }
-    setIsSearching(false);
-  };
+  }, [currentPageNum]);
 
-  const goToNextMatch = () => {
-    if (searchResults.length > 0) {
-      const nextIndex = (currentMatchIndex + 1) % searchResults.length;
-      setCurrentMatchIndex(nextIndex);
-      const pageElement = document.getElementById(
-        `pdf-page-${searchResults[nextIndex].page}`
-      );
-      if (pageElement) {
-        pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+  useEffect(() => {
+    const pdfContainer = document.querySelector('.custom-scrollbar');
+    if (pdfContainer) {
+      pdfContainer.addEventListener('scroll', handlePageScroll);
+      // Gọi một lần khi mount để set đúng trang ban đầu nếu không phải trang 1
+      handlePageScroll(); 
+      return () => {
+        pdfContainer.removeEventListener('scroll', handlePageScroll);
+      };
     }
-  };
+  }, [handlePageScroll]);
 
-  const goToPrevMatch = () => {
-    if (searchResults.length > 0) {
-      const prevIndex =
-        (currentMatchIndex - 1 + searchResults.length) % searchResults.length;
-      setCurrentMatchIndex(prevIndex);
-      const pageElement = document.getElementById(
-        `pdf-page-${searchResults[prevIndex].page}`
-      );
-      if (pageElement) {
-        pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }
-  };
-
-  const clearSearch = () => {
-    setSearchTerm("");
-    setSearchResults([]);
-    setCurrentMatchIndex(-1);
-  };
 
   return (
     <div className="flex flex-col h-full w-full">
       {/* Thanh điều khiển PDF */}
-      {/* Sử dụng justify-end trên màn hình nhỏ để các nút dồn về một phía nếu bị vỡ dòng */}
-      <div className="flex flex-col sm:flex-row flex-wrap justify-center sm:justify-between items-center gap-3 px-4 py-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-        {/* Phần điều khiển Zoom (giữ nguyên) */}
-        <div className="flex items-center gap-2 order-1">
-          <IconButton
-            size="sm"
-            color="blue-gray"
-            variant="text"
-            onClick={zoomOut}
-            className="rounded-full"
-            disabled={scale <= 0.4}
-          >
-            <FaSearchMinus className="text-lg" />
-          </IconButton>
-          <Typography
-            variant="small"
-            color="blue-gray"
-            className="font-medium min-w-[70px] text-center"
-          >
-            Zoom: {(scale * 100).toFixed(0)}%
-          </Typography>
-          <IconButton
-            size="sm"
-            color="blue-gray"
-            variant="text"
-            onClick={zoomIn}
-            className="rounded-full"
-            disabled={scale >= 3.0}
-          >
-            <FaSearchPlus className="text-lg" />
-          </IconButton>
-        </div>
+      {/* THAY ĐỔI PADDING TẠI ĐÂY: px-2 py-1 trên mobile, px-4 py-3 trên sm trở lên */}
+      <div className="flex flex-col sm:flex-row flex-wrap justify-center sm:justify-between items-center gap-2 px-2 py-1 md:px-4 md:py-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
 
-        {/* Phần input tìm kiếm và điều hướng kết quả */}
-        {/* Đặt order-3 trên mobile, order-2 trên sm trở lên */}
-        <div className="flex items-center gap-2 w-full sm:w-auto order-3 sm:order-2">
-          <Input
-            type="text"
-            label="Tìm kiếm trong PDF..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSearch();
-            }}
-            className="flex-grow min-w-[120px] max-w-[250px] md:max-w-[300px]" // Điều chỉnh min/max width
-            containerProps={{ className: "min-w-[120px] sm:min-w-[150px] flex-grow" }} // Quan trọng: flex-grow ở đây
-          />
-          {searchTerm && (
+        {/* HÀNG 1: Zoom và Điều hướng trang (luôn cùng 1 dòng) */}
+        <div className="flex items-center justify-center sm:justify-between w-full flex-wrap gap-2"> {/* Giảm gap trên mobile */}
+
+          {/* Phần điều khiển Zoom */}
+          <div className="flex items-center gap-1 sm:gap-2 order-1 flex-shrink-0 whitespace-nowrap"> {/* Giảm gap cho các nút zoom */}
             <IconButton
               size="sm"
-              color="gray"
+              color="blue-gray"
               variant="text"
-              onClick={clearSearch}
+              onClick={zoomOut}
               className="rounded-full"
+              disabled={scale <= 0.4}
             >
-              <FaTimes />
+              <FaSearchMinus size={14} /> {/* GIẢM KÍCH THƯỚC ICON */}
             </IconButton>
-          )}
-          <Button
-            size="sm"
-            color="blue"
-            onClick={handleSearch}
-            className="rounded-md"
-            disabled={isSearching}
-          >
-            {isSearching ? "Đang tìm..." : <FaSearch className="text-sm" />}
-          </Button>
+            <Typography
+              variant="small"
+              color="blue-gray"
+              className="font-medium min-w-[50px] text-center text-xs sm:text-sm" // Giảm font-size trên mobile
+            >
+              {(scale * 100).toFixed(0)}% {/* Bỏ chữ "Zoom:" để gọn hơn */}
+            </Typography>
+            <IconButton
+              size="sm"
+              color="blue-gray"
+              variant="text"
+              onClick={zoomIn}
+              className="rounded-full"
+              disabled={scale >= 3.0}
+            >
+              <FaSearchPlus size={14} /> {/* GIẢM KÍCH THƯỚC ICON */}
+            </IconButton>
+          </div>
 
-          {searchResults.length > 0 && (
-            <>
-              <IconButton
-                size="sm"
-                color="blue-gray"
-                variant="text"
-                onClick={goToPrevMatch}
-                className="rounded-full"
-              >
-                <FaChevronLeft />
-              </IconButton>
+          {/* Phần điều hướng trang và input "Đi đến trang" */}
+          <div className="flex items-center gap-1 sm:gap-2 order-2 flex-shrink-0 whitespace-nowrap justify-center sm:justify-end"> {/* Giảm gap cho các nút điều hướng */}
+            <IconButton
+              size="sm"
+              color="blue-gray"
+              variant="text"
+              onClick={goToPrevPage}
+              className="rounded-full"
+              disabled={currentPageNum <= 1}
+            >
+              <FaChevronLeft size={14} /> {/* GIẢM KÍCH THƯỚC ICON */}
+            </IconButton>
+
+            {/* Input "Trang" và hiển thị tổng số trang */}
+            <div className="flex items-center gap-0.5"> {/* Giảm gap giữa input và text */}
+              <Input
+                type="number"
+                label="Trang"
+                value={gotoPageInput === "" ? currentPageNum : gotoPageInput}
+                onChange={(e) => setGotoPageInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleGoToPage();
+                }}
+                className="min-w-[60px] max-w-[80px] flex-grow !py-1 !text-sm" // GIẢM MIN/MAX WIDTH, THÊM PADDING VÀ FONT SIZE
+                containerProps={{ className: "min-w-[60px] max-w-[80px] flex-grow h-auto" }} // Đảm bảo chiều cao tự động
+              />
               <Typography
-                variant="small"
-                color="blue-gray"
-                className="font-medium min-w-[50px] text-center"
+                  variant="small"
+                  color="blue-gray"
+                  className="font-medium flex-shrink-0 text-xs sm:text-sm" // Giảm font-size trên mobile
               >
-                {currentMatchIndex + 1} / {searchResults.length}
+                  /{numPages || '?'}
               </Typography>
-              <IconButton
-                size="sm"
-                color="blue-gray"
-                variant="text"
-                onClick={goToNextMatch}
-                className="rounded-full"
-              >
-                <FaChevronRight />
-              </IconButton>
-            </>
-          )}
-        </div>
-
-        {/* Phần nhảy trang bằng input */}
-        {/* Đặt order-2 trên mobile, order-3 trên sm trở lên */}
-        <div className="flex items-center gap-2 order-2 sm:order-3 w-full sm:w-auto justify-center sm:justify-end"> {/* Thêm justify-center/end */}
-          <Input
-            type="number"
-            label="Trang" // Rút gọn nhãn
-            value={gotoPageInput}
-            onChange={(e) => setGotoPageInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleGoToPage();
-            }}
-            className="min-w-[70px] max-w-[100px] flex-grow" // Giảm min-width, thêm max-width, flex-grow
-            containerProps={{ className: "min-w-[70px] max-w-[100px] flex-grow" }}
-          />
-          <Button
-            size="sm"
-            color="light-blue"
-            onClick={handleGoToPage}
-            className="rounded-md"
-            disabled={!gotoPageInput || !numPages}
-          >
-            Đi
-          </Button>
+            </div>
+            
+            <Button
+              size="sm"
+              color="gray"
+              variant="filled"
+              onClick={handleGoToPage}
+              className="rounded-md !px-2 !py-1" // GIẢM PADDING NÚT "ĐI"
+              disabled={!gotoPageInput || !numPages || parseInt(gotoPageInput, 10) > numPages || parseInt(gotoPageInput, 10) < 1}
+            >
+              Đến
+            </Button>
+            <IconButton
+              size="sm"
+              color="blue-gray"
+              variant="text"
+              onClick={goToNextPage}
+              className="rounded-full"
+              disabled={currentPageNum >= numPages}
+            >
+              <FaChevronRight size={14} /> {/* GIẢM KÍCH THƯỚC ICON */}
+            </IconButton>
+          </div>
         </div>
       </div>
 
@@ -268,7 +227,7 @@ function PdfViewer({ pdfUrl }) {
             {numPages &&
               Array.from(new Array(numPages), (el, index) => (
                 <div
-                  key={`page_${index + 1}`}
+                  key={`pdf-page-${index + 1}`}
                   id={`pdf-page-${index + 1}`}
                   className="mb-4 shadow-lg"
                 >
