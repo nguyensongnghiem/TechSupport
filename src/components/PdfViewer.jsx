@@ -8,6 +8,7 @@ import {
   FaSearchPlus,
   FaChevronLeft,
   FaChevronRight,
+  FaExternalLinkAlt, // Icon cho nút mở tab mới
 } from "react-icons/fa";
 
 // Cấu hình worker cho react-pdf
@@ -73,31 +74,30 @@ function PdfViewer({ pdfUrl }) {
   }, [gotoPageInput, numPages]);
 
   const handlePageScroll = useCallback(() => {
-    const pages = document.querySelectorAll('[id^="pdf-page-"]');
-    if (!pages.length) return; // Không có trang nào để xử lý
+    const pdfContainer = document.querySelector('.custom-scrollbar');
+    if (!pdfContainer) return;
 
-    let currentVisiblePage = 1;
-    let closestToTop = Infinity;
+    const pages = pdfContainer.querySelectorAll('[id^="pdf-page-"]');
+    if (!pages.length) return;
+
+    let currentVisiblePage = currentPageNum;
+    let maxVisibleHeight = 0;
 
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
       const rect = page.getBoundingClientRect();
+      const containerRect = pdfContainer.getBoundingClientRect();
 
-      // Kiểm tra xem trang có đang trong viewport không
-      if (rect.top <= window.innerHeight && rect.bottom >= 0) {
-        // Tính toán mức độ hiển thị của trang trong viewport
-        const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
-        const pageHeight = rect.height;
+      const visibleTop = Math.max(rect.top, containerRect.top);
+      const visibleBottom = Math.min(rect.bottom, containerRect.bottom);
+      const visibleHeight = visibleBottom - visibleTop;
 
-        // Nếu trang hiển thị hơn 50% hoặc là trang gần đỉnh nhất
-        if (visibleHeight > pageHeight * 0.5 || rect.top < closestToTop) {
-            currentVisiblePage = i + 1;
-            closestToTop = rect.top;
-        }
+      if (visibleHeight > 0 && visibleHeight > maxVisibleHeight) {
+        currentVisiblePage = i + 1;
+        maxVisibleHeight = visibleHeight;
       }
     }
-    
-    // Chỉ cập nhật nếu trang đã thay đổi để tránh re-render không cần thiết
+
     if (currentVisiblePage !== currentPageNum) {
       setCurrentPageNum(currentVisiblePage);
     }
@@ -107,8 +107,7 @@ function PdfViewer({ pdfUrl }) {
     const pdfContainer = document.querySelector('.custom-scrollbar');
     if (pdfContainer) {
       pdfContainer.addEventListener('scroll', handlePageScroll);
-      // Gọi một lần khi mount để set đúng trang ban đầu nếu không phải trang 1
-      handlePageScroll(); 
+      handlePageScroll();
       return () => {
         pdfContainer.removeEventListener('scroll', handlePageScroll);
       };
@@ -116,103 +115,118 @@ function PdfViewer({ pdfUrl }) {
   }, [handlePageScroll]);
 
 
+  const handleOpenInNewTab = () => {
+    if (pdfUrl) {
+      window.open(pdfUrl, '_blank');
+    }
+  };
+
   return (
     <div className="flex flex-col h-full w-full">
       {/* Thanh điều khiển PDF */}
-      {/* THAY ĐỔI PADDING TẠI ĐÂY: px-2 py-1 trên mobile, px-4 py-3 trên sm trở lên */}
-      <div className="flex flex-col sm:flex-row flex-wrap justify-center sm:justify-between items-center gap-2 px-2 py-1 md:px-4 md:py-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-
-        {/* HÀNG 1: Zoom và Điều hướng trang (luôn cùng 1 dòng) */}
-        <div className="flex items-center justify-center sm:justify-between w-full flex-wrap gap-2"> {/* Giảm gap trên mobile */}
-
-          {/* Phần điều khiển Zoom */}
-          <div className="flex items-center gap-1 sm:gap-2 order-1 flex-shrink-0 whitespace-nowrap"> {/* Giảm gap cho các nút zoom */}
-            <IconButton
-              size="sm"
-              color="blue-gray"
-              variant="text"
-              onClick={zoomOut}
-              className="rounded-full"
-              disabled={scale <= 0.4}
-            >
-              <FaSearchMinus size={14} /> {/* GIẢM KÍCH THƯỚC ICON */}
-            </IconButton>
-            <Typography
-              variant="small"
-              color="blue-gray"
-              className="font-medium min-w-[50px] text-center text-xs sm:text-sm" // Giảm font-size trên mobile
-            >
-              {(scale * 100).toFixed(0)}% {/* Bỏ chữ "Zoom:" để gọn hơn */}
-            </Typography>
-            <IconButton
-              size="sm"
-              color="blue-gray"
-              variant="text"
-              onClick={zoomIn}
-              className="rounded-full"
-              disabled={scale >= 3.0}
-            >
-              <FaSearchPlus size={14} /> {/* GIẢM KÍCH THƯỚC ICON */}
-            </IconButton>
-          </div>
-
-          {/* Phần điều hướng trang và input "Đi đến trang" */}
-          <div className="flex items-center gap-1 sm:gap-2 order-2 flex-shrink-0 whitespace-nowrap justify-center sm:justify-end"> {/* Giảm gap cho các nút điều hướng */}
-            <IconButton
-              size="sm"
-              color="blue-gray"
-              variant="text"
-              onClick={goToPrevPage}
-              className="rounded-full"
-              disabled={currentPageNum <= 1}
-            >
-              <FaChevronLeft size={14} /> {/* GIẢM KÍCH THƯỚC ICON */}
-            </IconButton>
-
-            {/* Input "Trang" và hiển thị tổng số trang */}
-            <div className="flex items-center gap-0.5"> {/* Giảm gap giữa input và text */}
-              <Input
-                type="number"
-                label="Trang"
-                value={gotoPageInput === "" ? currentPageNum : gotoPageInput}
-                onChange={(e) => setGotoPageInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleGoToPage();
-                }}
-                className="min-w-[60px] max-w-[80px] flex-grow !py-1 !text-sm" // GIẢM MIN/MAX WIDTH, THÊM PADDING VÀ FONT SIZE
-                containerProps={{ className: "min-w-[60px] max-w-[80px] flex-grow h-auto" }} // Đảm bảo chiều cao tự động
-              />
-              <Typography
-                  variant="small"
-                  color="blue-gray"
-                  className="font-medium flex-shrink-0 text-xs sm:text-sm" // Giảm font-size trên mobile
-              >
-                  /{numPages || '?'}
-              </Typography>
-            </div>
-            
-            <Button
-              size="sm"
-              color="gray"
-              variant="filled"
-              onClick={handleGoToPage}
-              className="rounded-md !px-2 !py-1" // GIẢM PADDING NÚT "ĐI"
-              disabled={!gotoPageInput || !numPages || parseInt(gotoPageInput, 10) > numPages || parseInt(gotoPageInput, 10) < 1}
-            >
-              Đến
-            </Button>
-            <IconButton
-              size="sm"
-              color="blue-gray"
-              variant="text"
-              onClick={goToNextPage}
-              className="rounded-full"
-              disabled={currentPageNum >= numPages}
-            >
-              <FaChevronRight size={14} /> {/* GIẢM KÍCH THƯỚC ICON */}
-            </IconButton>
-          </div>
+      <div className="flex flex-wrap justify-between items-center gap-2 px-2 py-1 md:px-4 md:py-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+        
+        {/* Phần điều khiển Zoom */}
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 whitespace-nowrap">
+          <IconButton
+            size="sm"
+            color="blue-gray"
+            variant="text"
+            onClick={zoomOut}
+            className="rounded-full"
+            disabled={scale <= 0.4}
+          >
+            <FaSearchMinus size={14} />
+          </IconButton>
+          <Typography
+            variant="small"
+            color="blue-gray"
+            className="font-medium min-w-[50px] text-center text-xs sm:text-sm"
+          >
+            {(scale * 100).toFixed(0)}%
+          </Typography>
+          <IconButton
+            size="sm"
+            color="blue-gray"
+            variant="text"
+            onClick={zoomIn}
+            className="rounded-full"
+            disabled={scale >= 3.0}
+          >
+            <FaSearchPlus size={14} />
+          </IconButton>
         </div>
+
+        {/* Phần điều hướng trang và input "Đi đến trang" */}
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 whitespace-nowrap justify-center">
+          <IconButton
+            size="sm"
+            color="blue-gray"
+            variant="text"
+            onClick={goToPrevPage}
+            className="rounded-full"
+            disabled={currentPageNum <= 1}
+          >
+            <FaChevronLeft size={14} />
+          </IconButton>
+
+          {/* Input "Trang" và hiển thị tổng số trang */}
+          <div className="flex items-center gap-0.5">
+            <Input
+              type="number"
+              label="Trang"
+              value={gotoPageInput === "" ? currentPageNum : gotoPageInput}
+              onChange={(e) => setGotoPageInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleGoToPage();
+              }}
+              className="min-w-[60px] max-w-[80px] flex-grow !py-1 !text-sm"
+              containerProps={{ className: "min-w-[60px] max-w-[80px] flex-grow h-auto" }}
+            />
+            <Typography
+                variant="small"
+                color="blue-gray"
+                className="font-medium flex-shrink-0 text-xs sm:text-sm"
+            >
+                /{numPages || '?'}
+            </Typography>
+          </div>
+          
+          <Button
+            size="sm"
+            color="gray"
+            variant="filled"
+            onClick={handleGoToPage}
+            className="rounded-md !px-2 !py-1 text-xs" // Giảm kích thước font trên mobile
+            disabled={!gotoPageInput || !numPages || parseInt(gotoPageInput, 10) > numPages || parseInt(gotoPageInput, 10) < 1}
+          >
+            Đến
+          </Button>
+          <IconButton
+            size="sm"
+            color="blue-gray"
+            variant="text"
+            onClick={goToNextPage}
+            className="rounded-full"
+            disabled={currentPageNum >= numPages}
+          >
+            <FaChevronRight size={14} />
+          </IconButton>
+        </div>
+
+        {/* Nút "Mở trong tab mới" (chỉ là IconButton nhỏ gọn) */}
+        {pdfUrl && (
+          <IconButton
+            size="sm" // Kích thước nhỏ
+            color="blue"
+            variant="text" // Dạng text để tinh tế hơn
+            onClick={handleOpenInNewTab}
+            className="rounded-full hidden sm:inline-flex" // Ẩn trên mobile, chỉ hiển thị trên sm trở lên
+            title="Mở trong tab mới" // Thêm tooltip
+          >
+            <FaExternalLinkAlt size={14} />
+          </IconButton>
+        )}
       </div>
 
       {/* Vùng hiển thị PDF có thanh cuộn riêng */}
