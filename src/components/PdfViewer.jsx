@@ -8,10 +8,12 @@ import {
   FaSearchPlus,
   FaChevronLeft,
   FaChevronRight,
-  FaExternalLinkAlt, // Icon cho nút mở tab mới
+  FaExternalLinkAlt,
+  FaDownload,
+  FaPrint,
+  FaAngleDoubleRight
 } from "react-icons/fa";
 
-// Cấu hình worker cho react-pdf
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url
@@ -37,41 +39,40 @@ function PdfViewer({ pdfUrl }) {
   const zoomOut = useCallback(() => setScale((s) => Math.max(s - 0.2, 0.4)), []);
   const zoomIn = useCallback(() => setScale((s) => Math.min(s + 0.2, 3.0)), []);
 
-  const goToNextPage = useCallback(() => {
-    if (currentPageNum < numPages) {
-      const nextPage = currentPageNum + 1;
-      setCurrentPageNum(nextPage);
-      const pageElement = document.getElementById(`pdf-page-${nextPage}`);
+  const goToPage = useCallback((pageNumber) => {
+    if (pageNumber > 0 && pageNumber <= numPages) {
+      setCurrentPageNum(pageNumber);
+      const pageElement = document.getElementById(`pdf-page-${pageNumber}`);
       if (pageElement) {
         pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }
-  }, [currentPageNum, numPages]);
+  }, [numPages]);
+
+  const goToNextPage = useCallback(() => {
+    if (currentPageNum < numPages) {
+      goToPage(currentPageNum + 1);
+    }
+  }, [currentPageNum, numPages, goToPage]);
 
   const goToPrevPage = useCallback(() => {
     if (currentPageNum > 1) {
-      const prevPage = currentPageNum - 1;
-      setCurrentPageNum(prevPage);
-      const pageElement = document.getElementById(`pdf-page-${prevPage}`);
-      if (pageElement) {
-        pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      goToPage(currentPageNum - 1);
     }
-  }, [currentPageNum]);
+  }, [currentPageNum, goToPage]);
 
-  const handleGoToPage = useCallback(() => {
+  const handleGoToPageInput = useCallback(() => {
     const page = parseInt(gotoPageInput, 10);
-    if (page > 0 && page <= numPages) {
-      setCurrentPageNum(page);
-      const pageElement = document.getElementById(`pdf-page-${page}`);
-      if (pageElement) {
-        pageElement.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-      setGotoPageInput("");
+    if (page > 0 && page <= numPages && page !== currentPageNum) { // Thêm điều kiện page !== currentPageNum
+      goToPage(page);
+      setGotoPageInput(""); // Clear input after valid jump
+    } else if (page === currentPageNum) {
+      setGotoPageInput(""); // Nếu nhập đúng trang hiện tại thì cũng clear input
     } else {
       alert(`Vui lòng nhập số trang hợp lệ từ 1 đến ${numPages || "?"}.`);
+      setGotoPageInput(""); // Clear input nếu không hợp lệ
     }
-  }, [gotoPageInput, numPages]);
+  }, [gotoPageInput, numPages, currentPageNum, goToPage]);
 
   const handlePageScroll = useCallback(() => {
     const pdfContainer = document.querySelector('.custom-scrollbar');
@@ -82,24 +83,41 @@ function PdfViewer({ pdfUrl }) {
 
     let currentVisiblePage = currentPageNum;
     let maxVisibleHeight = 0;
+    let closestPageNum = currentPageNum;
+    let minDistance = Infinity;
+
+    const containerTop = pdfContainer.scrollTop;
+    const containerBottom = containerTop + pdfContainer.clientHeight;
 
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
-      const rect = page.getBoundingClientRect();
-      const containerRect = pdfContainer.getBoundingClientRect();
+      const pageTop = page.offsetTop;
+      const pageBottom = pageTop + page.offsetHeight;
 
-      const visibleTop = Math.max(rect.top, containerRect.top);
-      const visibleBottom = Math.min(rect.bottom, containerRect.bottom);
+      const visibleTop = Math.max(pageTop, containerTop);
+      const visibleBottom = Math.min(pageBottom, containerBottom);
       const visibleHeight = visibleBottom - visibleTop;
 
       if (visibleHeight > 0 && visibleHeight > maxVisibleHeight) {
         currentVisiblePage = i + 1;
         maxVisibleHeight = visibleHeight;
       }
+
+      const distance = Math.abs(pageTop - containerTop);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestPageNum = i + 1;
+      }
     }
 
-    if (currentVisiblePage !== currentPageNum) {
-      setCurrentPageNum(currentVisiblePage);
+    if (maxVisibleHeight > (pages[0]?.offsetHeight * 0.5 || 0)) {
+      if (currentVisiblePage !== currentPageNum) {
+        setCurrentPageNum(currentVisiblePage);
+      }
+    } else {
+      if (closestPageNum !== currentPageNum) {
+        setCurrentPageNum(closestPageNum);
+      }
     }
   }, [currentPageNum]);
 
@@ -121,13 +139,40 @@ function PdfViewer({ pdfUrl }) {
     }
   };
 
+  const handleDownloadPdf = () => {
+    if (pdfUrl) {
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = pdfUrl.substring(pdfUrl.lastIndexOf('/') + 1) || 'document.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handlePrintPdf = () => {
+    if (pdfUrl) {
+      const printWindow = window.open(pdfUrl, '_blank');
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
+  };
+
+  // Điều kiện hiển thị nút "Đi đến trang" (FaAngleDoubleRight)
+  const showGoToPageButton =
+    gotoPageInput !== "" &&
+    parseInt(gotoPageInput, 10) > 0 &&
+    parseInt(gotoPageInput, 10) <= numPages &&
+    parseInt(gotoPageInput, 10) !== currentPageNum;
+
   return (
     <div className="flex flex-col h-full w-full">
       {/* Thanh điều khiển PDF */}
-      <div className="flex flex-wrap justify-between items-center gap-2 px-2 py-1 md:px-4 md:py-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+      <div className="flex flex-wrap justify-between items-center gap-2 px-2 py-2 md:px-4 md:py-3 border-b border-gray-200 bg-gray-300 flex-shrink-0 shadow-sm">
         
-        {/* Phần điều khiển Zoom */}
-        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 whitespace-nowrap">
+        {/* Nhóm trái: Zoom và thông tin trang */}
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
           <IconButton
             size="sm"
             color="blue-gray"
@@ -135,8 +180,9 @@ function PdfViewer({ pdfUrl }) {
             onClick={zoomOut}
             className="rounded-full"
             disabled={scale <= 0.4}
+            title="Thu nhỏ"
           >
-            <FaSearchMinus size={14} />
+            <FaSearchMinus size={16} />
           </IconButton>
           <Typography
             variant="small"
@@ -152,13 +198,14 @@ function PdfViewer({ pdfUrl }) {
             onClick={zoomIn}
             className="rounded-full"
             disabled={scale >= 3.0}
+            title="Phóng to"
           >
-            <FaSearchPlus size={14} />
+            <FaSearchPlus size={16} />
           </IconButton>
         </div>
 
-        {/* Phần điều hướng trang và input "Đi đến trang" */}
-        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 whitespace-nowrap justify-center">
+        {/* PHẦN ĐIỀU HƯỚNG TRANG ĐÃ ĐƯỢC CHỈNH SỬA */}
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 justify-center">
           <IconButton
             size="sm"
             color="blue-gray"
@@ -166,42 +213,51 @@ function PdfViewer({ pdfUrl }) {
             onClick={goToPrevPage}
             className="rounded-full"
             disabled={currentPageNum <= 1}
+            title="Trang trước"
           >
-            <FaChevronLeft size={14} />
+            <FaChevronLeft size={16} />
           </IconButton>
 
-          {/* Input "Trang" và hiển thị tổng số trang */}
-          <div className="flex items-center gap-0.5">
+          {/* Input "Trang" và hiển thị tổng số trang - Cải tiến căn chỉnh và kích thước */}
+          <div className="flex items-center gap-0.5 justify-center">
             <Input
               type="number"
-              label="Trang"
+              // Đã loại bỏ onBlur ở đây
               value={gotoPageInput === "" ? currentPageNum : gotoPageInput}
               onChange={(e) => setGotoPageInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleGoToPage();
+                if (e.key === "Enter") handleGoToPageInput();
               }}
-              className="min-w-[60px] max-w-[80px] flex-grow !py-1 !text-sm"
-              containerProps={{ className: "min-w-[60px] max-w-[80px] flex-grow h-auto" }}
+              className="!py-0.5 !text-sm text-center !max-w-[70px] min-w-[50px] h-[32px] !border-b-2"
+              containerProps={{ className: "min-w-[50px] max-w-[70px] h-auto" }}
+              labelProps={{ className: "hidden" }}
+              crossOrigin=""
+              color="blue-gray"
+              variant="static"
             />
             <Typography
-                variant="small"
-                color="blue-gray"
-                className="font-medium flex-shrink-0 text-xs sm:text-sm"
+              variant="small"
+              color="blue-gray"
+              className="font-medium flex-shrink-0 text-xs sm:text-sm pt-1"
             >
-                /{numPages || '?'}
+              / {numPages || '?'}
             </Typography>
           </div>
           
-          <Button
-            size="sm"
-            color="gray"
-            variant="filled"
-            onClick={handleGoToPage}
-            className="rounded-md !px-2 !py-1 text-xs" // Giảm kích thước font trên mobile
-            disabled={!gotoPageInput || !numPages || parseInt(gotoPageInput, 10) > numPages || parseInt(gotoPageInput, 10) < 1}
-          >
-            Đến
-          </Button>
+          {/* Nút "Đi đến trang" (FaAngleDoubleRight) chỉ hiển thị khi có input và hợp lệ */}
+          {showGoToPageButton && (
+            <IconButton
+              size="sm"
+              color="blue-gray"
+              variant="text"
+              onClick={handleGoToPageInput}
+              className="rounded-full"
+              title="Đi đến trang"
+            >
+              <FaAngleDoubleRight size={16} />
+            </IconButton>
+          )}
+
           <IconButton
             size="sm"
             color="blue-gray"
@@ -209,28 +265,53 @@ function PdfViewer({ pdfUrl }) {
             onClick={goToNextPage}
             className="rounded-full"
             disabled={currentPageNum >= numPages}
+            title="Trang kế tiếp"
           >
             <FaChevronRight size={14} />
           </IconButton>
         </div>
 
-        {/* Nút "Mở trong tab mới" (chỉ là IconButton nhỏ gọn) */}
-        {pdfUrl && (
-          <IconButton
-            size="sm" // Kích thước nhỏ
-            color="blue"
-            variant="text" // Dạng text để tinh tế hơn
-            onClick={handleOpenInNewTab}
-            className="rounded-full hidden sm:inline-flex" // Ẩn trên mobile, chỉ hiển thị trên sm trở lên
-            title="Mở trong tab mới" // Thêm tooltip
-          >
-            <FaExternalLinkAlt size={14} />
-          </IconButton>
-        )}
+        {/* Nhóm phải: Các tùy chọn khác (Open, Download, Print) */}
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          {pdfUrl && (
+            <>
+              <IconButton
+                size="sm"
+                color="blue-gray"
+                variant="text"
+                onClick={handleDownloadPdf}
+                className="rounded-full hidden sm:inline-flex"
+                title="Tải xuống PDF"
+              >
+                <FaDownload size={14} />
+              </IconButton>
+              <IconButton
+                size="sm"
+                color="blue-gray"
+                variant="text"
+                onClick={handlePrintPdf}
+                className="rounded-full hidden sm:inline-flex"
+                title="In PDF"
+              >
+                <FaPrint size={14} />
+              </IconButton>
+              <IconButton
+                size="sm"
+                color="blue-gray"
+                variant="text"
+                onClick={handleOpenInNewTab}
+                className="rounded-full "
+                title="Mở trong tab mới"
+              >
+                <FaExternalLinkAlt size={14} />
+              </IconButton>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Vùng hiển thị PDF có thanh cuộn riêng */}
-      <div className="flex-grow overflow-y-auto bg-gray-100 flex flex-col items-center p-4 gap-4 custom-scrollbar">
+      <div className="flex-grow overflow-y-auto bg-gray-100 flex flex-col items-center p-4 gap-4 custom-scrollbar  shadow-inner">
         {pdfUrl ? (
           <Document
             file={pdfUrl}
@@ -243,7 +324,7 @@ function PdfViewer({ pdfUrl }) {
                 <div
                   key={`pdf-page-${index + 1}`}
                   id={`pdf-page-${index + 1}`}
-                  className="mb-4 shadow-lg"
+                  className="mb-4 shadow-lg bg-white rounded-md" // Thêm bo tròn nhẹ cho từng trang
                 >
                   <Page
                     pageNumber={index + 1}

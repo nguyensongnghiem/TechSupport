@@ -7,7 +7,7 @@ export default withMT({
   ],
   theme: {
     fontFamily: {
-      sans: ["Ubuntu", "sans-serif"],
+      sans: ["Roboto", "sans-serif"],
     },
     extend: {},
   },

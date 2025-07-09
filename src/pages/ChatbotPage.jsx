@@ -113,7 +113,7 @@ function ChatbotPage() {
   };
 
   return (
-    <div className="flex flex-col items-center bg-gray-50 h-[calc(100vh-56px)] pt-4 sm:pt-8 pb-4">
+    <div className="flex flex-col items-center bg-gray-50 h-[calc(100vh-80px)] pt-2 pb-2">
       <div className="w-[95%] max-w-xl sm:max-w-2xl lg:max-w-3xl bg-white rounded-xl shadow-2xl p-4 sm:p-6 flex flex-col h-full">
         <div className="flex items-center justify-between pb-3 border-b border-gray-200 mb-3 flex-shrink-0">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-800">

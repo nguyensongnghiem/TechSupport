@@ -2,7 +2,7 @@ import React from "react";
 
 const Header = () => {
   return (
-    <header className="flex w-full items-center gap-x-4 bg-gray-400 px-4 py-2 shadow-sm">
+    <header className="flex w-full items-center gap-x-4 bg-gray-200 px-4 py-2 shadow">
       {/* Bọc logo trong thẻ <a> để tạo liên kết */}
       <a href="/" className="flex items-center"> {/* Thêm flex items-center để giữ ảnh và text logo thẳng hàng nếu có */}
         <img src="/images/cang_logo.png" alt="logo" className="h-10 mr-3" />
