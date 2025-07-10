@@ -8,7 +8,7 @@ import {
 
 function HomePage() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-gray-300">
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap justify-center gap-8">
           {/* Card: Xem tài liệu */}

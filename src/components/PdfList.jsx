@@ -29,7 +29,7 @@ function PdfList({ pdfs, onSelectPdf }) {
             <ListItem
               key={pdf.url}
               // Bỏ variant="text" và color="gray" để tùy chỉnh bằng Tailwind
-              className="w-full text-left normal-case flex items-center justify-between p-3 mb-2 
+              className="w-full text-left normal-case flex items-center justify-between py-2 mb-2 
                          bg-white rounded-lg shadow-sm cursor-pointer border border-gray-200
                          hover:bg-blue-50 hover:text-blue-700 transition duration-200 ease-in-out" // Hiệu ứng hover và bo tròn nhẹ
               onClick={() => onSelectPdf(pdf.url)}

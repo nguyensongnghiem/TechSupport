@@ -24,15 +24,15 @@
       // Đảm bảo phần tử gốc của trang có chiều cao cố định
       // `h-screen` là 100% chiều cao viewport, nó rất phù hợp ở đây.
       // Nếu bạn có header/footer ngoài cùng, có thể cần điều chỉnh `h-screen` thành `h-[calc(100vh - header_height)]`
-      <div className=" flex flex-col p-4 bg-gray-100 h-[calc(100vh-80px)] ">
+      <div className=" flex flex-col p-4 bg-gray-200 h-[calc(100vh-80px)] ">
         {/* Tiêu đề trang (ẩn trên mobile, hiển thị trên màn hình lớn) */}
         {/* Thêm class 'hidden' để ẩn mặc định trên mobile, và 'lg:block' để hiển thị trên màn hình lớn */}
         <Typography
           variant="h5"
           color="blue-gray"
-          className="mb-4 text-xl lg:text-xl font-bold items-center gap-2 flex-shrink-0 hidden md:flex"
+          className="mb-4 text-lg lg:text-xl font-bold items-center gap-2 flex-shrink-0 hidden md:flex"
         >
-          <FaBookOpen className="text-blue-900 text-xl" />
+          <FaBookOpen className="text-blue-900 text-lg" />
           Tra cứu Tài liệu Kỹ thuật
         </Typography>
 
@@ -52,7 +52,7 @@
               <Typography
                 variant="h6"
                 color="blue-gray"
-                className="mb-4 text-xl font-semibold flex items-center gap-2 overflow-y-auto"
+                className="mb-4 text-lg font-semibold flex items-center gap-2 overflow-y-auto"
               >
                 <FaList className="text-blue-900" />
                 Danh mục tài liệu
