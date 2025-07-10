@@ -1,36 +1,29 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { v4 as uuidv4 } from "uuid";
-import { FaPaperPlane } from "react-icons/fa";
+import { FaPaperPlane, FaRobot, FaUserCircle } from "react-icons/fa";
+import { Typewriter } from "react-simple-typewriter";
+import { Switch } from "@material-tailwind/react";
+import Header from "../components/Header";
+const CHATBOT_WEBHOOK_URL = import.meta.env.VITE_CHATBOT_WEBHOOK_URL;
 
-// Hàm tạo sessionId ngẫu nhiên (UUID v4)
 function generateSessionId() {
   return uuidv4();
 }
-
-// Lấy URL của webhook từ biến môi trường
-// Cú pháp sẽ khác nhau tùy thuộc vào công cụ build của bạn
-const CHATBOT_WEBHOOK_URL = import.meta.env.VITE_CHATBOT_WEBHOOK_URL;
-console.log("CHATBOT_WEBHOOK_URL:", CHATBOT_WEBHOOK_URL);
-// Bạn nên sử dụng một URL dự phòng hợp lý hoặc một thông báo lỗi nếu URL là bắt buộc.
-// Ví dụ: console.error("CHATBOT_WEBHOOK_URL is not defined!");
-// Hoặc throw new Error("CHATBOT_WEBHOOK_URL environment variable is missing.");
 
 function ChatbotPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
+  const [typingOutput, setTypingOutput] = useState("");
+  const [darkMode, setDarkMode] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Cuộn xuống cuối tin nhắn khi có tin nhắn mới hoặc trạng thái tải thay đổi
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
+  }, [messages, isLoading, typingOutput]);
 
-  // Tạo hoặc lấy sessionId từ sessionStorage khi component mount
-  // Thêm lời chào của bot
   useEffect(() => {
     let storedId = sessionStorage.getItem("chatbotSessionId");
     if (!storedId) {
@@ -38,19 +31,16 @@ function ChatbotPage() {
       sessionStorage.setItem("chatbotSessionId", storedId);
     }
     setSessionId(storedId);
-
-    // Add initial greeting from the bot
     setMessages([
       {
         sender: "bot",
-        text: "Chào bạn! Tôi là một trợ lý AI hỗ trợ kỹ thuật 24/7 với các vấn đề về kỹ thuật thiết bị tại Cảng Đà Nẵng. Tôi có thể giúp gì cho bạn hôm nay?",
+        text: "🤖 Xin chào! Tôi là trợ lý kỹ thuật AI tại Cảng Đà Nẵng. Bạn cần tôi hỗ trợ điều gì hôm nay?",
       },
     ]);
   }, []);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
-
     const userMsg = { sender: "user", text: input };
     setMessages((msgs) => [...msgs, userMsg]);
     setInput("");
@@ -58,190 +48,164 @@ function ChatbotPage() {
 
     const payload = {
       action: "sendMessage",
-      sessionId: sessionId,
+      sessionId,
       route: "general",
-      chatInput: input,
-      metadata: {
-        userId: "",
-      },
+      chatInput: userMsg.text,
+      metadata: { userId: "" },
     };
 
     try {
-      // SỬ DỤNG BIẾN MÔI TRƯỜNG Ở ĐÂY
-      const res = await fetch(
-        CHATBOT_WEBHOOK_URL, // <-- Đã thay thế URL nhúng cứng bằng biến môi trường
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("Lỗi HTTP:", res.status, errorText);
-        throw new Error(`Server returned an error: ${res.status}`);
-      }
-
+      const res = await fetch(CHATBOT_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       const data = await res.json();
-      console.log("Dữ liệu nhận được từ server:", data);
+      const botText = data?.output || "⚠️ Không nhận được phản hồi hợp lệ.";
 
-      if (data && data.output) {
-        setMessages((msgs) => [...msgs, { sender: "bot", text: data.output }]);
-      } else {
-        setMessages((msgs) => [
-          ...msgs,
-          {
-            sender: "bot",
-            text: "Xin lỗi, tôi không nhận được phản hồi hợp lệ.",
-          },
-        ]);
-        console.warn("Phản hồi từ server không có trường 'output':", data);
-      }
-    } catch (error) {
-      console.error("Lỗi khi gửi tin nhắn hoặc xử lý phản hồi:", error);
-      setMessages((msgs) => [
-        ...msgs,
-        {
-          sender: "bot",
-          text: "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.",
-        },
-      ]);
+      setTypingOutput("");
+      setTimeout(() => {
+        setTypingOutput(botText);
+      }, 300);
+    } catch (err) {
+      console.error(err);
+      setTypingOutput("❌ Có lỗi xảy ra. Hãy thử lại sau.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (!typingOutput) return;
+    const botMsg = { sender: "bot", text: typingOutput };
+    setMessages((msgs) => [...msgs, botMsg]);
+    setTypingOutput("");
+  }, [typingOutput]);
+
+  const themeClasses = darkMode
+    ? {
+        bg: "bg-gray-900",
+        card: "bg-gray-800 text-white border-gray-700",
+        input: "bg-gray-700 text-white border-gray-600 placeholder-gray-400",
+        botBubble: "bg-gray-700 text-gray-100 border border-gray-600",
+        userBubble: "bg-gradient-to-br from-cyan-500 to-blue-500 text-white",
+        header: "bg-gray-850 border-gray-700 text-cyan-400",
+      }
+    : {
+        bg: "bg-gray-100",
+        card: "bg-white text-gray-900 border-gray-200",
+        input: "bg-white text-gray-800 border-gray-300 placeholder-gray-400",
+        botBubble: "bg-gray-200 text-gray-800 border border-gray-300",
+        userBubble: "bg-gradient-to-br from-cyan-500 to-blue-500 text-white",
+        header: "bg-white border-gray-200 text-cyan-600",
+      };
+
   return (
-    <div className="flex flex-col items-center bg-gray-50 h-[calc(100vh-80px)] pt-2 pb-2">
-      <div className="w-[95%] max-w-xl sm:max-w-2xl lg:max-w-3xl bg-white rounded-xl shadow-2xl p-4 sm:p-6 flex flex-col h-full">
-        <div className="flex items-center justify-between pb-3 border-b border-gray-200 mb-3 flex-shrink-0">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-            Hỗ trợ kỹ thuật 24/7
+    <div className="flex flex-col h-screen">
+      <Header/>
+    <div
+      className={` flex items-center h-[calc(100vh-57px)] justify-center px-4 py-6 bg-gray-200`}
+    >
+      <div
+        className={`w-full max-w-2xl ${themeClasses.card} rounded-2xl shadow-xl flex flex-col overflow-hidden border h-full`}
+      >
+        {/* Header */}
+        <div
+          className={`flex items-center justify-between px-6 py-4 border-b ${themeClasses.header} shadow-sm`}
+        >
+          <h1 className="text-xl font-semibold flex items-center gap-2">
+            <FaRobot /> Trợ lý kỹ thuật AI
           </h1>
-          <svg
-            className="w-7 h-7 sm:w-8 sm:h-8 text-blue-500 flex-shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
+          {/* <button
+            onClick={() => setDarkMode(!darkMode)}
+            className="text-sm underline hover:text-cyan-500"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-            ></path>
-          </svg>
+            {darkMode ? "Chế độ sáng" : "Chế độ tối"}
+          </button> */}
+          {/* <Switch label={darkMode ? "Sáng" : "Tối"} onChange={setDarkMode(!darkMode)} checked={darkMode} /> */}
+        
+          <Switch            
+            onClick={() => setDarkMode(!darkMode)}
+            ripple={false}
+            className="h-full w-full checked:bg-gradient-to-r from-cyan-500 to-blue-500"
+            containerProps={{
+              className: "w-11 h-6",
+            }}
+            circleProps={{
+              className: "before:hidden left-0.5 border-none",
+            }}            
+          />
         </div>
 
-        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-          {messages.length === 0 && !isLoading && (
-            <div className="flex items-center justify-center h-full text-gray-500 italic">
-              Bắt đầu cuộc trò chuyện của bạn...
-            </div>
-          )}
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
           {messages.map((msg, idx) => (
             <div
               key={idx}
-              className={`flex mb-4 ${
-                msg.sender === "user" ? "justify-end" : "justify-start"
-              }`}
+              className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
             >
-              <div
-                className={`max-w-[85%] px-3 py-2 sm:px-4 sm:py-2 rounded-lg shadow-md ${
-                  msg.sender === "user"
-                    ? "bg-blue-600 text-white rounded-br-none ml-auto"
-                    : "bg-gray-200 text-gray-800 rounded-bl-none mr-auto"
-                }`}
-              >
-                {msg.sender === "bot" ? (
-                  <div className="prose prose-sm max-w-none text-sm sm:text-base">
-                    <ReactMarkdown>{msg.text}</ReactMarkdown>
-                  </div>
-                ) : (
-                  <span className="text-sm sm:text-base">{msg.text}</span>
+              <div className="flex items-end gap-2">
+                {msg.sender === "bot" && (
+                  <FaRobot className="text-xl text-cyan-500" />
                 )}
+                {msg.sender === "user" && (
+                  <FaUserCircle className="text-xl text-gray-400" />
+                )}
+                <div
+                  className={`max-w-[80%] px-4 py-2 rounded-xl text-md leading-relaxed shadow ${
+                    msg.sender === "user"
+                      ? `${themeClasses.userBubble} rounded-br-none`
+                      : `${themeClasses.botBubble} rounded-bl-none`
+                  }`}
+                >
+                  <ReactMarkdown >{msg.text}</ReactMarkdown>
+                </div>
               </div>
             </div>
           ))}
 
           {isLoading && (
-            <div className="flex items-center justify-start mb-4">
-              <div className="flex items-center px-3 py-2 rounded-lg bg-gray-200 text-gray-700 shadow-md rounded-bl-none text-sm sm:text-base">
-                <svg
-                  className="animate-spin h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 text-blue-500"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                  />
-                </svg>
-                <span>Chatbot đang trả lời...</span>
-              </div>
+            <div className="flex items-center gap-2 text-gray-500 text-md animate-pulse ">
+              <FaRobot />
+              <span>
+                <Typewriter
+                  words={["Đang phản hồi..."]}
+                  loop={1}
+                  typeSpeed={80}
+                  deleteSpeed={50}
+                />
+              </span>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="flex gap-2 sm:gap-3 pt-3 border-t border-gray-200 flex-shrink-0">
-          <input
-            className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm sm:px-4 sm:py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 placeholder-gray-400"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Nhập tin nhắn của bạn..."
-            disabled={isLoading}
-          />
-          <button
-            className={`flex items-center justify-center bg-blue-600 text-white px-3 py-2 sm:px-5 sm:py-2.5 rounded-md font-semibold shadow-lg transition duration-300 ease-in-out text-sm sm:text-base ${
-              isLoading
-                ? "opacity-60 cursor-not-allowed"
-                : "hover:bg-blue-700 transform hover:scale-105"
-            }`}
-            onClick={sendMessage}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <svg
-                className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  fill="none"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                />
-              </svg>
-            ) : (
-              <>
-                <FaPaperPlane className="h-4 w-4 mr-1 sm:mr-2" />
-                Gửi
-              </>
-            )}
-          </button>
+        {/* Input */}
+        <div className={`border-t px-4 py-3 ${themeClasses.header}`}>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+              disabled={isLoading}
+              placeholder="Nhập tin nhắn..."
+              className={`flex-1 px-4 py-2 rounded-lg ${themeClasses.input} focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm shadow-sm`}
+            />
+            <button
+              onClick={sendMessage}
+              disabled={isLoading}
+              className={`flex items-center justify-center bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-md ${
+                isLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              <FaPaperPlane className="mr-2" />
+              Gửi
+            </button>
+          </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

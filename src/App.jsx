@@ -22,16 +22,16 @@ function App() {
   return (  
     <>   
       <div className="flex h-screen min-h-screen flex-col">
-        <Header></Header>
-        <div className="flex flex-1 flex-col overflow-y-hidden sm:flex-row">
+        
+        {/* <div className="flex flex-1 flex-col overflow-y-hidden sm:flex-row"> */}
           {/* <nav className="flex overflow-y-auto sm:min-w-64">
             <SideBar2></SideBar2>
           </nav> */}
           <main className="flex-1 overflow-y-auto">
             <Outlet />
           </main>
-        </div>
-        <Footer />
+        {/* </div> */}
+        {/* <Footer /> */}
       </div>
       <ToastContainer />            
     </>

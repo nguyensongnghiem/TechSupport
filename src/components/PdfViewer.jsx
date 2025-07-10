@@ -169,10 +169,10 @@ function PdfViewer({ pdfUrl }) {
   return (
     <div className="flex flex-col h-full w-full">
       {/* Thanh điều khiển PDF */}
-      <div className="flex flex-wrap justify-between items-center gap-2 px-2 py-2 md:px-4 md:py-3 border-b border-gray-200 bg-gray-300 flex-shrink-0 shadow-sm">
+      <div className="flex flex-wrap justify-between items-center gap-2 sm:gap-1 px-2 py-2 md:px-4 md:py-3 border-b border-gray-200 bg-gray-300 flex-shrink-0">
         
         {/* Nhóm trái: Zoom và thông tin trang */}
-        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+        <div className="flex items-center gap-0 sm:gap-2 flex-shrink-0">
           <IconButton
             size="sm"
             color="blue-gray"
