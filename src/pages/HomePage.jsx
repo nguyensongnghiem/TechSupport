@@ -27,7 +27,7 @@ function HomePage() {
           <div className="w-full max-w-[200px] lg:max-w-[250px] p-4">
             <Link to="/pdf-viewer">
               <img
-                src="/public/images/lib_icon.png"
+                src="/images/lib_icon.png"
                 alt="Tech Support"
                 className="w-full h-auto  object-cover object-center transition-transform duration-300 ease-in-out hover:scale-110"
               />
@@ -37,7 +37,7 @@ function HomePage() {
           <div className="w-full max-w-[200px] lg:max-w-[250px] p-4">
             <Link to="/chatbot">
               <img
-                src="/public/images/chatbot_icon.png"
+                src="/images/chatbot_icon.png"
                 alt="Tech Support"
                 className="w-full h-auto  object-fit object-center transition-transform duration-300 ease-in-out hover:scale-110"
               />

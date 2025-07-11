@@ -116,7 +116,7 @@ function ChatbotPage() {
             <div className="text-xl font-semibold flex items-center gap-2">
               <img
                 className="h-7 rounded-full object-cover object-center"
-                src="/public/images/Artboard 8.png"
+                src="/images/Artboard 8.png"
                 alt="nature image"
               />
               
