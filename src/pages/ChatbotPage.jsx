@@ -34,7 +34,7 @@ function ChatbotPage() {
     setMessages([
       {
         sender: "bot",
-        text: "🤖 Xin chào! Tôi là trợ lý kỹ thuật AI tại Cảng Đà Nẵng. Bạn cần tôi hỗ trợ điều gì hôm nay?",
+        text: "🤖 Xin chào! Tôi là trợ lý trí tuệ nhân tạo cho Cảng Đà Nẵng. Bạn cần tôi hỗ trợ điều gì hôm nay?",
       },
     ]);
   }, []);
@@ -102,110 +102,116 @@ function ChatbotPage() {
 
   return (
     <div className="flex flex-col h-screen">
-      <Header/>
-    <div
-      className={` flex items-center h-[calc(100vh-57px)] justify-center px-4 py-6 bg-gray-200`}
-    >
+      <Header />
       <div
-        className={`w-full max-w-2xl ${themeClasses.card} rounded-2xl shadow-xl flex flex-col overflow-hidden border h-full`}
+        className={` flex items-center h-[calc(100vh-57px)] justify-center px-4 py-6 bg-gray-200`}
       >
-        {/* Header */}
         <div
-          className={`flex items-center justify-between px-6 py-4 border-b ${themeClasses.header} shadow-sm`}
+          className={`w-full max-w-2xl ${themeClasses.card} rounded-2xl shadow-xl flex flex-col overflow-hidden border h-full`}
         >
-          <h1 className="text-xl font-semibold flex items-center gap-2">
-            <FaRobot /> Trợ lý kỹ thuật AI
-          </h1>
-          {/* <button
+          {/* Header */}
+          <div
+            className={`flex items-center justify-between px-6 py-4 border-b ${themeClasses.header} shadow-sm`}
+          >
+            <div className="text-xl font-semibold flex items-center gap-2">
+              <img
+                className="h-7 rounded-full object-cover object-center"
+                src="/public/images/Artboard 8.png"
+                alt="nature image"
+              />
+              
+              
+            </div>
+            {/* <button
             onClick={() => setDarkMode(!darkMode)}
             className="text-sm underline hover:text-cyan-500"
           >
             {darkMode ? "Chế độ sáng" : "Chế độ tối"}
           </button> */}
-          {/* <Switch label={darkMode ? "Sáng" : "Tối"} onChange={setDarkMode(!darkMode)} checked={darkMode} /> */}
-        
-          <Switch            
-            onClick={() => setDarkMode(!darkMode)}
-            ripple={false}
-            className="h-full w-full checked:bg-gradient-to-r from-cyan-500 to-blue-500"
-            containerProps={{
-              className: "w-11 h-6",
-            }}
-            circleProps={{
-              className: "before:hidden left-0.5 border-none",
-            }}            
-          />
-        </div>
+            {/* <Switch label={darkMode ? "Sáng" : "Tối"} onChange={setDarkMode(!darkMode)} checked={darkMode} /> */}
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
-          {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div className="flex items-end gap-2">
-                {msg.sender === "bot" && (
-                  <FaRobot className="text-xl text-cyan-500" />
-                )}
-                {msg.sender === "user" && (
-                  <FaUserCircle className="text-xl text-gray-400" />
-                )}
-                <div
-                  className={`max-w-[80%] px-4 py-2 rounded-xl text-md leading-relaxed shadow ${
-                    msg.sender === "user"
-                      ? `${themeClasses.userBubble} rounded-br-none`
-                      : `${themeClasses.botBubble} rounded-bl-none`
-                  }`}
-                >
-                  <ReactMarkdown >{msg.text}</ReactMarkdown>
+            <Switch
+              onClick={() => setDarkMode(!darkMode)}
+              ripple={false}
+              className="h-full w-full checked:bg-gradient-to-r from-cyan-500 to-blue-500"
+              containerProps={{
+                className: "w-11 h-6",
+              }}
+              circleProps={{
+                className: "before:hidden left-0.5 border-none",
+              }}
+            />
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div className="flex items-end gap-2">
+                  {msg.sender === "bot" && (
+                    <FaRobot className="text-xl text-cyan-500" />
+                  )}
+                  {msg.sender === "user" && (
+                    <FaUserCircle className="text-xl text-gray-400" />
+                  )}
+                  <div
+                    className={`max-w-[80%] px-4 py-2 rounded-xl text-md leading-relaxed shadow ${
+                      msg.sender === "user"
+                        ? `${themeClasses.userBubble} rounded-br-none`
+                        : `${themeClasses.botBubble} rounded-bl-none`
+                    }`}
+                  >
+                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
 
-          {isLoading && (
-            <div className="flex items-center gap-2 text-gray-500 text-md animate-pulse ">
-              <FaRobot />
-              <span>
-                <Typewriter
-                  words={["Đang phản hồi..."]}
-                  loop={1}
-                  typeSpeed={80}
-                  deleteSpeed={50}
-                />
-              </span>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+            {isLoading && (
+              <div className="flex items-center gap-2 text-gray-500 text-md animate-pulse ">
+                <FaRobot />
+                <span>
+                  <Typewriter
+                    words={["Đang phản hồi..."]}
+                    loop={1}
+                    typeSpeed={80}
+                    deleteSpeed={50}
+                  />
+                </span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
 
-        {/* Input */}
-        <div className={`border-t px-4 py-3 ${themeClasses.header}`}>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              disabled={isLoading}
-              placeholder="Nhập tin nhắn..."
-              className={`flex-1 px-4 py-2 rounded-lg ${themeClasses.input} focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm shadow-sm`}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={isLoading}
-              className={`flex items-center justify-center bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-md ${
-                isLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-            >
-              <FaPaperPlane className="mr-2" />
-              Gửi
-            </button>
+          {/* Input */}
+          <div className={`border-t px-4 py-3 ${themeClasses.header}`}>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                disabled={isLoading}
+                placeholder="Nhập tin nhắn..."
+                className={`flex-1 px-4 py-2 rounded-lg ${themeClasses.input} focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm shadow-sm`}
+              />
+              <button
+                onClick={sendMessage}
+                disabled={isLoading}
+                className={`flex items-center justify-center bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-md ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                <FaPaperPlane className="mr-2" />
+                Gửi
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </div>
   );
 }

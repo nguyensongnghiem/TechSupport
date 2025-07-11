@@ -1,121 +1,81 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Thêm useEffect
 import PdfList from "../components/PdfList";
 import PdfViewer from "../components/PdfViewer";
 import PdfDropdown from "../components/PdfDropdown";
 import { Card, CardBody, Typography } from "@material-tailwind/react";
 import Header from "../components/Header";
 
-import { FaBookOpen, FaFilePdf, FaList } from "react-icons/fa"; // Đảm bảo đã cài đặt react-icons
+import { FaBookOpen, FaFilePdf, FaList } from "react-icons/fa";
+
+// Định nghĩa URL gốc của API của bạn
+const API_BASE_URL = "http://digithub.io.vn:3001";
 
 function PdfViewerPage() {
   const [selectedPdf, setSelectedPdf] = useState(null);
+  const [pdfs, setPdfs] = useState([]); // State mới để lưu danh sách PDF từ API
+  const [loading, setLoading] = useState(true); // State để quản lý trạng thái tải
+  const [error, setError] = useState(null); // State để quản lý lỗi
 
-  const pdfs = [
-    {
-      name: "31 Days to Overcome Your Fear of Shooting Street Photography copy.pdf",
-      url: "/docs/31 Days to Overcome Your Fear of Shooting Street Photography copy.pdf",
-    },
-    {
-      name: "31 Days to Overcome Your Fear of Shooting Street Photography.pdf",
-      url: "/docs/31 Days to Overcome Your Fear of Shooting Street Photography.pdf",
-    },
-    {
-      name: "100 Photography Tips For Beginners by Eric Kim copy.pdf",
-      url: "/docs/100 Photography Tips For Beginners by Eric Kim copy.pdf",
-    },
-    {
-      name: "100 Photography Tips For Beginners by Eric Kim.pdf",
-      url: "/docs/100 Photography Tips For Beginners by Eric Kim.pdf",
-    },
-    { name: "bgp copy.pdf", url: "/docs/bgp copy.pdf" },
-    { name: "bgp.pdf", url: "/docs/bgp.pdf" },
-    {
-      name: "How to Overcome Photographer's Block - Eric Kim copy.pdf",
-      url: "/docs/How to Overcome Photographer's Block - Eric Kim copy.pdf",
-    },
-    {
-      name: "How to Overcome Photographer's Block - Eric Kim.pdf",
-      url: "/docs/How to Overcome Photographer's Block - Eric Kim.pdf",
-    },
-    {
-      name: "Monochrome Manual copy.pdf",
-      url: "/docs/Monochrome Manual copy.pdf",
-    },
-    { name: "Monochrome Manual.pdf", url: "/docs/Monochrome Manual.pdf" },
-    { name: "sample1 copy.pdf", url: "/docs/sample1 copy.pdf" },
-    { name: "sample1.pdf", url: "/docs/sample1.pdf" },
-    { name: "sample2 copy.pdf", url: "/docs/sample2 copy.pdf" },
-    { name: "sample2.pdf", url: "/docs/sample2.pdf" },
-    {
-      name: "Street Photography 101 copy.pdf",
-      url: "/docs/Street Photography 101 copy.pdf",
-    },
-    {
-      name: "Street Photography 101.pdf",
-      url: "/docs/Street Photography 101.pdf",
-    },
-    {
-      name: "Street Photography 102 copy.pdf",
-      url: "/docs/Street Photography 102 copy.pdf",
-    },
-    {
-      name: "Street Photography 102.pdf",
-      url: "/docs/Street Photography 102.pdf",
-    },
-    {
-      name: "Street Photography Contact Sheets copy.pdf",
-      url: "/docs/Street Photography Contact Sheets copy.pdf",
-    },
-    {
-      name: "Street Photography Contact Sheets.pdf",
-      url: "/docs/Street Photography Contact Sheets.pdf",
-    },
-    {
-      name: "The Social Media Blackbook for Photographers copy.pdf",
-      url: "/docs/The Social Media Blackbook for Photographers copy.pdf",
-    },
-    {
-      name: "The Social Media Blackbook for Photographers.pdf",
-      url: "/docs/The Social Media Blackbook for Photographers.pdf",
-    },
-    {
-      name: "The Street Photography Composition Manual copy.pdf",
-      url: "/docs/The Street Photography Composition Manual copy.pdf",
-    },
-    {
-      name: "The Street Photography Composition Manual.pdf",
-      url: "/docs/The Street Photography Composition Manual.pdf",
-    },
-    {
-      name: "The Street Portrait Manual - Small copy.pdf",
-      url: "/docs/The Street Portrait Manual - Small copy.pdf",
-    },
-    {
-      name: "The Street Portrait Manual - Small.pdf",
-      url: "/docs/The Street Portrait Manual - Small.pdf",
-    },
-    {
-      name: "Zen in the Art of Street Photography copy.pdf",
-      url: "/docs/Zen in the Art of Street Photography copy.pdf",
-    },
-    {
-      name: "Zen in the Art of Street Photography.pdf",
-      url: "/docs/Zen in the Art of Street Photography.pdf",
-    },
-    // Thêm các PDF khác nếu cần
-  ];
+  // Sử dụng useEffect để gọi API khi component được mount
+  useEffect(() => {
+    const fetchPdfs = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/files`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const filenames = await response.json(); // Lấy danh sách tên file
+
+        // Chuyển đổi danh sách tên file thành định dạng { name: "...", url: "..." }
+        // URL sẽ trỏ trực tiếp đến API tải file
+        const formattedPdfs = filenames.map((name) => ({
+          name: name,
+          url: `${API_BASE_URL}/files/${encodeURIComponent(name)}`, // Mã hóa tên file cho URL
+        }));
+        setPdfs(formattedPdfs);
+      } catch (err) {
+        setError("Không thể tải danh sách tài liệu: " + err.message);
+        console.error("Lỗi khi fetch danh sách PDF:", err);
+      } finally {
+        setLoading(false); // Dù thành công hay thất bại, đặt loading thành false
+      }
+    };
+
+    fetchPdfs();
+  }, []); // Mảng rỗng đảm bảo useEffect chỉ chạy một lần khi component mount
 
   const handleSelectPdf = (pdfUrl) => {
     setSelectedPdf(pdfUrl);
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col h-screen items-center justify-center bg-gray-200">
+        <Typography variant="h5" color="blue-gray">
+          Đang tải tài liệu...
+        </Typography>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col h-screen items-center justify-center bg-red-100 text-red-800">
+        <Typography variant="h5" color="red">
+          Lỗi: {error}
+        </Typography>
+        <Typography variant="paragraph" className="mt-2">
+          Vui lòng kiểm tra lại kết nối mạng hoặc trạng thái của API server.
+        </Typography>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen">
-      <Header> </Header>
+      <Header />
 
       <div className=" flex flex-col px-4 py-6 bg-gray-200 h-[calc(100vh-57px)] justify-center ">
-        {/* Tiêu đề trang (ẩn trên mobile, hiển thị trên màn hình lớn) */}
-        {/* Thêm class 'hidden' để ẩn mặc định trên mobile, và 'lg:block' để hiển thị trên màn hình lớn */}
         <Typography
           variant="h5"
           color="blue-gray"
@@ -125,18 +85,12 @@ function PdfViewerPage() {
           Tra cứu Tài liệu Kỹ thuật
         </Typography>
 
-        {/* Dropdown cho mobile (chỉ hiển thị trên mobile) */}
-        {/* Thêm class 'lg:hidden' để ẩn trên màn hình lớn */}
         <div className="block lg:hidden mb-6 z-10 flex-shrink-0">
           <PdfDropdown pdfs={pdfs} onSelectPdf={handleSelectPdf} />
         </div>
 
-        {/* Vùng nội dung chính: Chiếm hết không gian còn lại và là container flex */}
-        {/* Thay vì grid-cols-1 trên mobile, giờ chỉ có viewer, và sidebar ẩn */}
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
-          {/* Danh mục tài liệu (ẩn trên mobile, hiển thị trên desktop) */}
-          {/* Giữ nguyên hidden lg:block để ẩn trên mobile */}
-          <Card className="shadow-lg border border-gray-200 h-full min-h-[60vh]  lg:col-span-1 flex-col hidden lg:flex">
+          <Card className="shadow-lg border border-gray-200 h-full min-h-[60vh] lg:col-span-1 flex-col hidden lg:flex">
             <CardBody className="p-4 flex flex-col h-full overflow-hidden">
               <Typography
                 variant="h6"
@@ -152,17 +106,13 @@ function PdfViewerPage() {
                   onSelectPdf={handleSelectPdf}
                   selectedPdfUrl={selectedPdf}
                 />
-                {/* Thêm selectedPdfUrl vào PdfList để highlight mục đang chọn */}
               </div>
             </CardBody>
           </Card>
 
-          {/* Viewer: Cần h-full để PdfViewer nhận đủ chiều cao */}
           <Card className="shadow-lg border border-gray-200 w-full min-h-[60vh] lg:min-h-0 h-full lg:col-span-3 flex flex-col">
-            {/* CardBody cũng phải có h-full và flex-col để chia không gian cho PdfViewer */}
             <CardBody className="p-0 w-full flex-1 flex flex-col h-full rounded-lg overflow-hidden">
               {selectedPdf ? (
-                // PdfViewer cần h-full để chiếm hết không gian còn lại từ CardBody
                 <PdfViewer pdfUrl={selectedPdf} />
               ) : (
                 <div className="flex items-center justify-center h-full bg-blue-50 text-blue-700 p-4 rounded-lg flex-col gap-4">

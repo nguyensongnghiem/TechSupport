@@ -11,7 +11,7 @@ function HomePage() {
     <div className="flex items-center justify-center h-full bg-gray-300">
       <div className="container mx-auto px-4">
         <div className="flex-col md:flex-row flex items-center justify-center gap-8">
-          <div className="w-full max-w-[250px] p-4 flex items-center justify-center">
+          <div className="w-full max-w-[200px] lg:max-w-[250px] p-4 flex items-center justify-center">
             {" "}
             {/* Thêm flex, items-center, justify-center */}
             <Link to="/pdf-viewer" className="flex justify-center">
@@ -24,7 +24,7 @@ function HomePage() {
               />
             </Link>
           </div>
-          <div className="w-full max-w-[250px] p-4">
+          <div className="w-full max-w-[200px] lg:max-w-[250px] p-4">
             <Link to="/pdf-viewer">
               <img
                 src="/public/images/lib_icon.png"
@@ -34,7 +34,7 @@ function HomePage() {
             </Link>
           </div>
 
-          <div className="w-full max-w-[250px] p-4">
+          <div className="w-full max-w-[200px] lg:max-w-[250px] p-4">
             <Link to="/chatbot">
               <img
                 src="/public/images/chatbot_icon.png"
