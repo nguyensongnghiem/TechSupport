@@ -8,7 +8,7 @@ import Header from "../components/Header";
 import { FaBookOpen, FaFilePdf, FaList } from "react-icons/fa";
 
 // Định nghĩa URL gốc của API của bạn
-const API_BASE_URL = "http://digithub.io.vn:3001";
+const API_BASE_URL = "https://digithub.io.vn:3001";
 
 function PdfViewerPage() {
   const [selectedPdf, setSelectedPdf] = useState(null);
