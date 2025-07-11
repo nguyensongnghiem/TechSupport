@@ -20,7 +20,7 @@ function PdfDropdown({ pdfs, onSelectPdf }) {
           y: 25
         },
       }}
-      className='bg-gray-50 text-gray-800 '
+      className='bg-gray-50 text-gray-800'
     >
       {pdfs.map((pdf) => (
         <Option key={pdf.url} value={pdf.url}>

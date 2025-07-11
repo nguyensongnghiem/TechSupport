@@ -11,34 +11,32 @@ function HomePage() {
     <div className="flex items-center justify-center h-full bg-gray-300">
       <div className="container mx-auto px-4">
         <div className="flex-col md:flex-row flex items-center justify-center gap-8">
-          <div className="w-full max-w-[200px] lg:max-w-[250px] p-4 flex items-center justify-center">
-            {" "}
-            {/* Thêm flex, items-center, justify-center */}
+          <div className="w-full max-w-[350px] lg:max-w-[400px] p-4 flex items-center justify-center">
             <Link to="/pdf-viewer" className="flex justify-center">
               {" "}
               {/* Link cũng cần là flex để căn giữa nếu img nhỏ hơn */}
               <img
                 src="/images/info.png"
-                alt="Tech Support"
+                alt="CraneCare"
                 className="w-full h-auto object-cover object-center transition-transform duration-300 ease-in-out"
               />
             </Link>
           </div>
-          <div className="w-full max-w-[200px] lg:max-w-[250px] p-4">
+          <div className="w-full max-w-[170px] lg:max-w-[220px] p-4">
             <Link to="/pdf-viewer">
               <img
                 src="/images/lib_icon.png"
-                alt="Tech Support"
+                alt="Crane Library"
                 className="w-full h-auto  object-cover object-center transition-transform duration-300 ease-in-out hover:scale-110"
               />
             </Link>
           </div>
 
-          <div className="w-full max-w-[200px] lg:max-w-[250px] p-4">
+          <div className="w-full max-w-[170px] lg:max-w-[220px] p-4">
             <Link to="/chatbot">
               <img
                 src="/images/chatbot_icon.png"
-                alt="Tech Support"
+                alt="Crane IQ"
                 className="w-full h-auto  object-fit object-center transition-transform duration-300 ease-in-out hover:scale-110"
               />
             </Link>

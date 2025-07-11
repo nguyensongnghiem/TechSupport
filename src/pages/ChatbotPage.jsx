@@ -104,33 +104,32 @@ function ChatbotPage() {
     <div className="flex flex-col h-screen">
       <Header />
       <div
-        className={` flex items-center h-[calc(100vh-57px)] justify-center px-4 py-6 bg-gray-200`}
+        className={`flex items-center justify-center ${themeClasses.bg}
+                    h-[calc(100vh-57px)]
+                    md:px-4 md:py-6
+                    `}
       >
         <div
-          className={`w-full max-w-2xl ${themeClasses.card} rounded-2xl shadow-xl flex flex-col overflow-hidden border h-full`}
+          className={`w-full h-full flex flex-col overflow-hidden border
+                      ${themeClasses.card}
+                      md:rounded-2xl md:shadow-xl
+                      rounded-none shadow-none // Đảm bảo không có bo tròn hay bóng ở màn hình nhỏ hơn md
+                      md:max-w-2xl xl:max-w-4xl // <<< Đã thêm xl:max-w-4xl ở đây
+                    `}
         >
           {/* Header */}
           <div
-            className={`flex items-center justify-between px-6 py-4 border-b ${themeClasses.header} shadow-sm`}
+            className={`flex items-center justify-between px-6 py-4 border-b ${themeClasses.header} shadow-md`}
           >
             <div className="text-xl font-semibold flex items-center gap-2">
               <img
-                className="h-7 rounded-full object-cover object-center"
+                className="h-7 lg:h-9 rounded-full object-cover object-center"
                 src="/images/Artboard 8.png"
-                alt="nature image"
+                alt="CraneIQ logo"
               />
-              
-              
+              {/* <span className={`${darkMode ? 'text-cyan-400' : 'text-cyan-600'}`}>AI Chatbot</span> */}
             </div>
-            {/* <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="text-sm underline hover:text-cyan-500"
-          >
-            {darkMode ? "Chế độ sáng" : "Chế độ tối"}
-          </button> */}
-            {/* <Switch label={darkMode ? "Sáng" : "Tối"} onChange={setDarkMode(!darkMode)} checked={darkMode} /> */}
-
-            <Switch
+            {/* <Switch
               onClick={() => setDarkMode(!darkMode)}
               ripple={false}
               className="h-full w-full checked:bg-gradient-to-r from-cyan-500 to-blue-500"
@@ -140,7 +139,7 @@ function ChatbotPage() {
               circleProps={{
                 className: "before:hidden left-0.5 border-none",
               }}
-            />
+            /> */}
           </div>
 
           {/* Messages */}
@@ -148,14 +147,20 @@ function ChatbotPage() {
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex ${
+                  msg.sender === "user" ? "justify-end" : "justify-start"
+                }`}
               >
-                <div className="flex items-end gap-2">
+                <div
+                  className={`flex items-end gap-2 ${
+                    msg.sender === "user" ? "flex-row-reverse" : ""
+                  }`}
+                >
                   {msg.sender === "bot" && (
-                    <FaRobot className="text-xl text-cyan-500" />
+                    <FaRobot className="text-xl text-cyan-500 flex-shrink-0" />
                   )}
                   {msg.sender === "user" && (
-                    <FaUserCircle className="text-xl text-gray-400" />
+                    <FaUserCircle className="text-xl text-gray-400 flex-shrink-0" />
                   )}
                   <div
                     className={`max-w-[80%] px-4 py-2 rounded-xl text-md leading-relaxed shadow ${

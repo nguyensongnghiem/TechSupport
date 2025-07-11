@@ -75,11 +75,11 @@ function PdfViewerPage() {
     <div className="flex flex-col h-screen">
       <Header />
 
-      <div className=" flex flex-col px-4 py-6 bg-gray-200 h-[calc(100vh-57px)] justify-center ">
+      <div className="flex flex-col px-4 p-6 bg-gray-200 h-[calc(100vh-57px)] justify-center ">
         <Typography
           variant="h5"
           color="blue-gray"
-          className="my-4 text-lg lg:text-xl font-bold items-center gap-2 flex-shrink-0 hidden md:flex"
+          className="my-4 text-lg lg:text-xl font-bold items-center gap-2 flex-shrink-0 block hidden lg:flex"
         >
           <FaBookOpen className="text-blue-900 text-lg" />
           Tra cứu Tài liệu Kỹ thuật
@@ -90,7 +90,7 @@ function PdfViewerPage() {
         </div>
 
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
-          <Card className="shadow-lg border border-gray-200 h-full min-h-[60vh] lg:col-span-1 flex-col hidden lg:flex">
+          <Card className="shadow-lg border border-gray-200 h-full min-h-[57vh] lg:col-span-1 flex-col block hidden lg:flex">
             <CardBody className="p-4 flex flex-col h-full overflow-hidden">
               <Typography
                 variant="h6"
@@ -125,7 +125,7 @@ function PdfViewerPage() {
                     <span className="text-blue-900 hidden lg:inline">
                       danh mục bên trái
                     </span>
-                    <span className="text-blue-900 lg:hidden">
+                    <span className="text-blue-900 inline lg:hidden">
                       danh sách thả xuống
                     </span>{" "}
                     để xem.
