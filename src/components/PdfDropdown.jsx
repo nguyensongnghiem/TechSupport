@@ -1,10 +1,12 @@
 import React from 'react';
 import { Select, Option } from "@material-tailwind/react";
 
+// Đổi cách truyền `onSelectPdf`
 function PdfDropdown({ pdfs, onSelectPdf }) {
   const handleChange = (value) => {
     if (value) {
-      onSelectPdf(value);
+      // 'value' ở đây sẽ là tên file (string)
+      onSelectPdf(value); // <-- Truyền tên file
     }
   };
 
@@ -20,10 +22,12 @@ function PdfDropdown({ pdfs, onSelectPdf }) {
           y: 25
         },
       }}
-      className='bg-gray-50 text-gray-800'
+      className='bg-gray-50 text-gray-800 '
     >
+      {/* Duyệt qua danh sách PDF và tạo các Option */}
       {pdfs.map((pdf) => (
-        <Option key={pdf.url} value={pdf.url}>
+        // Value của Option bây giờ là tên file (string)
+        <Option key={pdf.name} value={pdf.name}> {/* <-- Key và Value là pdf.name */}
           {pdf.name}
         </Option>
       ))}

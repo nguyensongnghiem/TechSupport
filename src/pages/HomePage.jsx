@@ -12,15 +12,19 @@ function HomePage() {
       <div className="container mx-auto px-4">
         <div className="flex-col md:flex-row flex items-center justify-center gap-8">
           <div className="w-full max-w-[350px] lg:max-w-[400px] p-4 flex items-center justify-center">
-            <Link to="/pdf-viewer" className="flex justify-center">
-              {" "}
+            <div className="flex flex-col items-center justify-center">              
+              <img
+                src="/images/app_logo.png"
+                alt="CraneCare"
+                className="w-full h-auto object-cover object-center transition-transform duration-300 ease-in-out h-auto w-24 "
+              />
               {/* Link cũng cần là flex để căn giữa nếu img nhỏ hơn */}
               <img
                 src="/images/info.png"
                 alt="CraneCare"
                 className="w-full h-auto object-cover object-center transition-transform duration-300 ease-in-out"
               />
-            </Link>
+            </div>
           </div>
           <div className="w-full max-w-[170px] lg:max-w-[220px] p-4">
             <Link to="/pdf-viewer">
