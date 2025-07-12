@@ -1,48 +1,28 @@
 import React, { useState, useEffect } from "react";
 import PdfViewerIframe from "../components/PdfViewerIframe";
 import PdfList from "../components/PdfList";
-import PdfDropdown from "../components/PdfDropdown";
 import { Card, CardBody, Typography } from "@material-tailwind/react";
 import Header from "../components/Header";
 
-import { FaBookOpen, FaFilePdf, FaList } from "react-icons/fa";
+import { FaBookOpen, FaList } from "react-icons/fa";
 
-// Định nghĩa URL gốc của API của bạn
-// Đảm bảo cổng và domain này khớp với server Node.js của bạn (cổng 3002).
-const API_BASE_URL = "https://digithub.io.vn:3002/api"; 
+const API_BASE_URL = "https://digithub.io.vn:3002/api";
 
 function PdfViewerPage() {
   const [selectedPdfUrl, setSelectedPdfUrl] = useState(null);
-  const [pdfs, setPdfs] = useState([]); // Danh sách PDF (chỉ cần tên file)
+  const [pdfs, setPdfs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // State để lưu trữ tên file PDF đang được chọn
   const [currentSelectedPdfName, setCurrentSelectedPdfName] = useState(null);
 
-  // 1. Fetch danh sách tên file PDF ban đầu
   useEffect(() => {
     const fetchPdfs = async () => {
       try {
-        // Gọi API để lấy danh sách tên file từ server Node.js của bạn
-        // Endpoint: https://digithub.io.vn:3002/api/files
         const response = await fetch(`${API_BASE_URL}/files`);
-        if (!response.ok) {
+        if (!response.ok)
           throw new Error(`HTTP error! status: ${response.status}`);
-        }
         const filenames = await response.json();
-
-        // Chỉ lưu tên file vào state `pdfs`.
-        // URL sẽ được fetch riêng khi một file được chọn.
-        const formattedPdfs = filenames.map((name) => ({
-          name: name,
-          // Ở đây, chúng ta không cần tạo URL trực tiếp của file.
-          // Chúng ta chỉ cần tên file để truyền cho `handleSelectPdf`.
-          // Có thể đặt một giá trị placeholder hoặc bỏ qua trường url ở đây
-          // nếu PdfList và PdfDropdown không yêu cầu nó để hiển thị.
-          // Để nhất quán với cấu trúc cũ, vẫn có thể để url nhưng nó sẽ được cập nhật sau.
-          url: null // Sẽ được cập nhật khi fetch URL thực sự
-        }));
+        const formattedPdfs = filenames.map((name) => ({ name, url: null }));
         setPdfs(formattedPdfs);
       } catch (err) {
         setError("Không thể tải danh sách tài liệu: " + err.message);
@@ -51,60 +31,62 @@ function PdfViewerPage() {
         setLoading(false);
       }
     };
-
     fetchPdfs();
   }, []);
 
-  // 2. Fetch URL của PDF khi một file được chọn từ danh sách
   useEffect(() => {
     const fetchPdfUrl = async () => {
-      if (!currentSelectedPdfName) {
-        setSelectedPdfUrl(null); // Reset nếu không có tên file nào được chọn
+      const isMobile = window.innerWidth < 1024;
+      if (!currentSelectedPdfName || isMobile) {
+        setSelectedPdfUrl(null);
         return;
       }
 
-      setLoading(true); // Đặt loading khi đang fetch URL PDF
+      setLoading(true);
       setError(null);
-      setSelectedPdfUrl(null); // Xóa URL cũ
+      setSelectedPdfUrl(null);
 
       try {
-        // Mã hóa tên file trước khi truyền vào URL
         const encodedFilename = encodeURIComponent(currentSelectedPdfName);
-        // Gọi API để lấy URL của file PDF
-        // Endpoint: https://digithub.io.vn:3002/api/pdf-url/:filename
-        const response = await fetch(`${API_BASE_URL}/pdf-url/${encodedFilename}`);
-
-        if (!response.ok) {
+        const response = await fetch(
+          `${API_BASE_URL}/pdf-url/${encodedFilename}`
+        );
+        if (!response.ok)
           throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
         const data = await response.json();
-        const pdfPublicUrl = data.url; // Lấy URL từ response JSON
-
-        if (!pdfPublicUrl) {
-          throw new Error("API không trả về URL PDF hợp lệ.");
-        }
-
-        setSelectedPdfUrl(pdfPublicUrl); // Cập nhật state để hiển thị PDF
-
+        if (!data.url) throw new Error("API không trả về URL PDF hợp lệ.");
+        setSelectedPdfUrl(data.url);
       } catch (err) {
         console.error("Lỗi khi fetch URL PDF:", err);
         setError("Không thể tải đường dẫn tài liệu: " + err.message);
       } finally {
-        setLoading(false); // Dù thành công hay thất bại, đặt loading thành false
+        setLoading(false);
       }
     };
-
     fetchPdfUrl();
-  }, [currentSelectedPdfName, API_BASE_URL]); // Chạy lại khi currentSelectedPdfName thay đổi
+  }, [currentSelectedPdfName]);
 
-  // Hàm này sẽ được gọi từ PdfList hoặc PdfDropdown
-  // Nó nhận vào tên file PDF được chọn (chứ không phải URL)
-  const handleSelectPdf = (pdfName) => {
-    setCurrentSelectedPdfName(pdfName); // Lưu tên file vào state
+  const handleSelectPdf = async (pdfName) => {
+    setCurrentSelectedPdfName(pdfName);
+    const isMobile = window.innerWidth < 1024;
+    if (isMobile) {
+      try {
+        const encodedFilename = encodeURIComponent(pdfName);
+        const response = await fetch(
+          `${API_BASE_URL}/pdf-url/${encodedFilename}`
+        );
+        if (!response.ok) throw new Error("Không thể lấy URL PDF");
+        const data = await response.json();
+        if (data.url) window.open(data.url, "_blank");
+        else throw new Error("URL không hợp lệ");
+      } catch (err) {
+        console.error("Lỗi khi mở PDF trên mobile:", err);
+        setError("Không thể mở tài liệu: " + err.message);
+      }
+    }
   };
 
-  if (loading) {
+  if (loading && !selectedPdfUrl) {
     return (
       <div className="flex flex-col h-screen items-center justify-center bg-gray-200">
         <Typography variant="h5" color="blue-gray">
@@ -130,71 +112,46 @@ function PdfViewerPage() {
   return (
     <div className="flex flex-col h-screen">
       <Header />
-
-      <div className="flex flex-col px-4 p-6 bg-gray-100 h-[calc(100vh-57px)] justify-center ">
-        {/* <Typography
-          variant="h5"
-          color="blue-gray"
-          className="my-4 text-lg lg:text-xl font-bold items-center gap-2 flex-shrink-0 block hidden lg:flex"
-        >
-          <FaBookOpen className="text-blue-900 text-lg" />
-          Tra cứu Tài liệu Kỹ thuật
-        </Typography> */}
-
-        <div className="block lg:hidden mb-6 z-10 flex-shrink-0">
-          {/* Truyền danh sách PDF (chỉ tên file) và hàm chọn PDF */}
-          <PdfDropdown pdfs={pdfs} onSelectPdf={handleSelectPdf} />
-        </div>
-
+      <div className="flex flex-col px-4 p-6 bg-gray-100 h-[calc(100vh-57px)] justify-center">
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
-          <Card className="shadow-lg border border-gray-200 h-full min-h-[57vh] lg:col-span-1 flex-col block hidden lg:flex">
-            <CardBody className="p-4 flex flex-col h-full overflow-hidden">
-              <Typography
-                variant="h6"
-                color="blue-gray"
-                className="mb-4 text-lg font-semibold flex items-center gap-2 overflow-y-auto"
-              >
-                <FaList className="text-blue-900" />
-                Tra cứu tài liệu sửa chữa
-              </Typography>
-              <div className="flex-1 overflow-y-auto custom-scrollbar h-full">
-                {/* Truyền danh sách PDF (chỉ tên file) và hàm chọn PDF */}
-                <PdfList
-                  pdfs={pdfs}
-                  onSelectPdf={handleSelectPdf}
-                  // Cần truyền tên file hiện tại để PdfList làm nổi bật
-                  selectedPdfName={currentSelectedPdfName} 
-                />
-              </div>
-            </CardBody>
-          </Card>
+          {/* ✅ Hiển thị PdfList toàn màn hình ở mobile */}
+         <Card className="shadow-lg border border-gray-200 h-full min-h-[57vh] lg:col-span-1 flex-col">
+  <CardBody className="p-4 flex flex-col h-full overflow-hidden">
 
-          <Card className="shadow-lg border border-gray-200 w-full min-h-[60vh] lg:min-h-0 h-full lg:col-span-3 flex flex-col">
+    {/* Logo nằm bên trái, nhỏ vừa và có padding dưới */}
+    <div className="flex items-center justify-start mb-4">
+      <img
+        src="/images/logo text library.png"
+        alt="CraneIQ logo"
+        className="h-12 w-auto object-contain" // chiều cao 6, giữ nguyên tỉ lệ
+      />
+    </div>
+
+    <div className="flex-1 overflow-y-auto custom-scrollbar h-full">
+      <PdfList
+        pdfs={pdfs}
+        onSelectPdf={handleSelectPdf}
+        selectedPdfName={currentSelectedPdfName}
+      />
+    </div>
+    
+  </CardBody>
+</Card>
+
+          {/* ✅ Chỉ hiển thị PdfViewerIframe trên desktop */}
+          <Card className="hidden lg:flex shadow-lg border border-gray-200 w-full h-full lg:col-span-3 flex-col">
             <CardBody className="p-0 w-full flex-1 flex flex-col h-full rounded-xl overflow-hidden">
-              {/* Hiển thị loading hoặc error nếu đang trong quá trình fetch URL */}
-              {loading && !selectedPdfUrl ? ( // Chỉ hiện loading nếu chưa có URL và đang tải
-                <div className="flex items-center justify-center h-full text-gray-600">Đang tải tài liệu...</div>
-              ) : error ? (
-                <div className="flex items-center justify-center h-full text-red-600">{error}</div>
-              ) : selectedPdfUrl ? (
-                <PdfViewerIframe pdfUrl={selectedPdfUrl} />
-              ) : (
-                <div className="flex items-center justify-center h-full bg-blue-100 text-blue-700 p-4 rounded-lg flex-col gap-4">
-                  <FaBookOpen className="text-6xl" />
-                  <Typography
-                    variant="lead"
-                    className="text-center text-lg lg:text-xl font-medium"
-                  >
-                    Chọn một tài liệu từ{" "}
-                    <span className="hidden lg:inline">
-                      danh mục bên trái
-                    </span>
-                    <span className="inline lg:hidden">
-                      danh sách thả xuống
-                    </span>{" "}
-                    để xem.
-                  </Typography>
+              {!selectedPdfUrl ? (
+                <div className="flex items-center justify-center h-full bg-white text-blue-700 p-4 rounded-lg flex-col gap-4">
+                  <img
+                    src="/images/abc.jpg"
+                    alt="haha"
+                    className="w-2/3 h-auto object-cover object-center mb-4"
+                  />
+                
                 </div>
+              ) : (
+                <PdfViewerIframe pdfUrl={selectedPdfUrl} />
               )}
             </CardBody>
           </Card>

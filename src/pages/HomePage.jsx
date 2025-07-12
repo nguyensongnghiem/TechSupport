@@ -16,7 +16,7 @@ function HomePage() {
               <img
                 src="/images/app_logo.png"
                 alt="CraneCare"
-                className="w-full h-auto object-cover object-center transition-transform duration-300 ease-in-out h-auto w-24 "
+                className="object-cover object-center transition-transform duration-300 ease-in-out h-24 w-24 "
               />
               {/* Link cũng cần là flex để căn giữa nếu img nhỏ hơn */}
               <img
