@@ -35,7 +35,7 @@ function ChatbotPage() {
     setMessages([
       {
         sender: "bot",
-        text: "🤖 Xin chào! Tôi là trợ lý trí tuệ nhân tạo cho Cảng Đà Nẵng. Bạn cần tôi hỗ trợ điều gì hôm nay?",
+        text: "Xin chào! Tôi là trợ lý trí tuệ nhân tạo hỗ trợ sửa chữa cẩu. Bạn cần tôi hỗ trợ điều gì hôm nay?",
       },
     ]);
   }, []);
@@ -103,9 +103,7 @@ function ChatbotPage() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="hidden md:block">
-        <Header />
-      </div>
+      <Header />
       <div
         className={`flex flex-grow items-center justify-center ${themeClasses.bg}
                       h-[calc(100vh-57px)]
@@ -115,28 +113,28 @@ function ChatbotPage() {
         <div
           className={`w-full h-full flex flex-col overflow-hidden border
                       ${themeClasses.card}
-                      md:rounded-2xl md:shadow-xl
-                      rounded-none shadow-none // Đảm bảo không có bo tròn hay bóng ở màn hình nhỏ hơn md
+                      md:rounded-xl md:shadow-xl
+                      rounded-none shadow-none
                       md:max-w-2xl xl:max-w-4xl
                       `}
         >
           {/* Header */}
           <div
-            className={`flex items-center justify-between px-6 py-4 ${themeClasses.header} border-b border-gray-200`}
+            className={`flex items-center justify-between px-6 py-4 ${themeClasses.header} md:border-b md:border-gray-200`}
           >
-            <div className="flex flex-row text-xl font-semibold items-center gap-2 w-full justify-between">
+            <div className="flex flex-row text-xl items-center gap-2 w-full justify-between">
               <img
-                className="h-8 lg:h-11 object-cover object-center"
-                src="/images/Artboard 8.png"
+                className="h-8 md:h-11 object-cover object-center"
+                src="/images/text_IQ.png"
                 alt="CraneIQ logo"
               />
-              <Link to="/" className="flex items-center">
+              {/* <Link to="/" className="flex items-center">
                 <img
                   className="h-8 lg:h-11 object-cover object-center block md:hidden"
                   src="/images/app_logo.png"
                   alt="app logo"
                 />
-              </Link>
+              </Link> */}
             </div>
             {/* <Switch
               onClick={() => setDarkMode(!darkMode)}
@@ -166,7 +164,12 @@ function ChatbotPage() {
                   }`}
                 >
                   {msg.sender === "bot" && (
-                    <FaRobot className="text-xl text-cyan-500 flex-shrink-0" />
+                    // <FaRobot className="text-xl text-cyan-500 flex-shrink-0" />
+                    <img
+                      src="/images/logo_IQ.png"
+                      className="h-5 w-5 object-cover object-center rounded-full flex-shrink-0"
+                      alt="CraneIQ Bot Logo"
+                    />
                   )}
                   {msg.sender === "user" && (
                     <FaUserCircle className="text-xl text-gray-400 flex-shrink-0" />
@@ -186,10 +189,14 @@ function ChatbotPage() {
 
             {isLoading && (
               <div className="flex items-center gap-2 text-gray-500 text-md animate-pulse ">
-                <FaRobot />
+                <img
+                      src="/images/logo_IQ.png"
+                      className="h-5 w-5 object-cover object-center rounded-full flex-shrink-0"
+                      alt="CraneIQ Bot Logo"
+                    />
                 <span>
                   <Typewriter
-                    words={["Đang phản hồi..."]}
+                    words={["Đang suy nghĩ ..."]}
                     loop={1}
                     typeSpeed={80}
                     deleteSpeed={50}

@@ -25,17 +25,9 @@ function PdfList({ pdfs, onSelectPdf, selectedPdfName }) {
           label="Tìm kiếm tài liệu..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          color="blue"
+          color="cyan"
         />
       </div>
-
-      {/* ✅ Thông báo chỉ hiện ở mobile */}
-      {isMobile && (
-        <div className="block lg:hidden bg-yellow-200 text-yellow-900 text-sm p-3 rounded-md mb-3 border border-yellow-300">
-          ⚠️ Để tối ưu trải nghiệm trên thiết bị di động, tài liệu sẽ được mở trên một tab mới.
-        </div>
-      )}
-
       <div className="w-full flex-1 overflow-y-auto custom-scrollbar space-y-1">
         {filteredPdfs.length > 0 ? (
           filteredPdfs.map((pdf) => {
@@ -54,14 +46,14 @@ function PdfList({ pdfs, onSelectPdf, selectedPdfName }) {
                   }`}
               >
                 <FaFilePdf
-                  className={`text-base ${
-                    isSelected ? "text-blue-700" : "text-gray-500"
+                  className={`text-base font ${
+                    isSelected ? "text-red-700" : "text-red-200"
                   }`}
                 />
                 <Typography
                   variant="small"
-                  className={`flex-1 break-words ${
-                    isMobile ? "" : "line-clamp-2"
+                  className={`flex-1 font-[500] break-words ${
+                    isMobile ? "line-clapm-3" : "line-clamp-2"
                   }`}
                 >
                   {displayName}
