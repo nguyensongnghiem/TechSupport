@@ -6,7 +6,7 @@ import Header from "../components/Header";
 
 import { FaBookOpen, FaList } from "react-icons/fa";
 
-const API_BASE_URL = "https://digithub.io.vn:3002/api";
+const API_BASE_URL = "https://cloud-n8n.digithub.io.vn:3002/api";
 
 function PdfViewerPage() {
   const [selectedPdfUrl, setSelectedPdfUrl] = useState(null);
@@ -130,9 +130,11 @@ function PdfViewerPage() {
     <div className="flex flex-col h-screen">
       <Header />
       <div className="flex flex-col md:px-6 md:py-6 bg-gray-300 h-[calc(100vh-57px)] justify-center">
-        <div className= {`flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 h-full`}>
+        <div className={`flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 h-full`}>
           {/* ✅ chỉ Hiển thị PdfList full màn hình ở mobile / trên desktop hiển thị như 1 sidebar */}
-          <div className={`shadow-lg border border-gray-200 h-full min-h-[57vh] lg:col-span-1 flex-col ${themeClasses.card} rounded-none md:rounded-xl md:shadow-xl`}> 
+          <div
+            className={`shadow-lg border border-gray-200 h-full min-h-[57vh] lg:col-span-1 flex-col ${themeClasses.card} rounded-none md:rounded-xl md:shadow-xl`}
+          >
             <div className="p-4 flex flex-col h-full overflow-hidden">
               {/* Logo nằm bên trái, nhỏ vừa và có padding dưới */}
               <div className="flex items-center justify-start mb-4">
