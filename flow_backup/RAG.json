@@ -1,0 +1,628 @@
+{
+  "name": "RAG",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "64352548-d3cc-4e67-af4a-086693f584ab",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Tôi muốn hỏi về luật số X trong boxing, trích nội dung trực tiếp từ tài liệu PDF gốc. Vui lòng không suy luận, chỉ trả lại đoạn văn bản đã được lưu trữ tương ứng với luật đó."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -1280,
+        -816
+      ],
+      "id": "c9cd91f2-c663-4aed-807a-24826881e864",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -1408,
+        -608
+      ],
+      "id": "ab3be459-763a-4e94-b182-9086a54f94f7",
+      "name": "OpenRouter Chat Model"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Dùng nó để lấy thông tin về các luật trong boxing",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 20,
+        "useReranker": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        -1104,
+        -640
+      ],
+      "id": "add67dfc-acfb-47d3-80ad-385fa57028a3",
+      "name": "Supabase Vector Store"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -1264,
+        -608
+      ],
+      "id": "68168ac2-2286-448a-9e20-cea14ecc1993",
+      "name": "Postgres Chat Memory"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1104,
+        -496
+      ],
+      "id": "e869a00c-a7a4-43fa-9333-8d9453e233fb",
+      "name": "Embeddings OpenAI"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        -864
+      ],
+      "id": "129bad63-1e5f-47e3-ab5f-6f067ee2f956",
+      "name": "Supabase Vector Store1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        -640
+      ],
+      "id": "7a124785-76ca-42f6-b467-d28543d2d42b",
+      "name": "Embeddings OpenAI1"
+    },
+    {
+      "parameters": {
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "luatSo",
+                "value": "={{ $('Code').item.json.metadata.luatSo }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        -640
+      ],
+      "id": "326134a2-e206-4595-8827-099d7f1d3f5e",
+      "name": "Default Data Loader1"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "14SmISlFXR6FQdQwXsNavMbPmbLYfoyx4",
+          "mode": "list",
+          "cachedResultName": "20_luat_boxing_dai.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/14SmISlFXR6FQdQwXsNavMbPmbLYfoyx4/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -464,
+        -864
+      ],
+      "id": "5a58546f-9c2b-4d66-bf27-8197a3b7998f",
+      "name": "Download file"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        -864
+      ],
+      "id": "cbf28af2-44ab-47c0-9b71-9510cee9f9b6",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "options": {
+          "allowFileUploads": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -496,
+        -192
+      ],
+      "id": "aaf2e37d-7e2f-4bf9-a3a8-ce32bbcbc0ed",
+      "name": "When chat message received",
+      "webhookId": "1c6c46e4-c445-4ee1-9bfb-0c093f2943f7"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        320,
+        -480
+      ],
+      "id": "87ac8e85-9dcb-48f1-b8d6-9035bdb07fdb",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputText = $json.text; // Đây là nội dung PDF sau khi extract\n\n// Tách từng luật dựa vào tiêu đề \"Luật số X.\"\nconst rules = inputText.split(/\\n(?=Luật số\\s*\\d+\\.)/);\n\n// Mapping ra từng object\nreturn rules\n  .map(rule => {\n    const match = rule.match(/^Luật số\\s*(\\d+)\\.\\s*(.*)/s);\n    if (!match) return null;\n\n    const luatSo = parseInt(match[1], 10);\n    const ruleText = match[2].trim();\n\n    return {\n      json: {\n        pageContent: ruleText,\n        metadata: {\n          luatSo,\n          source: \"boxing_rules.pdf\" // Gán tên file hoặc sửa tùy use case\n        }\n      }\n    };\n  })\n  .filter(item => item !== null);\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        -864
+      ],
+      "id": "79d2ab2b-f504-46cf-8d44-53c23ff1b5bf",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Dùng nó để lấy thông tin về các luật trong boxing",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 20,
+        "useReranker": true,
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "luatSo",
+                "value": "={{ $('Code1').item.json.metadata.LuatSo }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        -16
+      ],
+      "id": "3b34eff2-797c-49b3-9e36-3af111eb5866",
+      "name": "Supabase Vector Store2"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4o",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        -16
+      ],
+      "id": "0825b79c-7cea-4356-8f59-db00780716e0",
+      "name": "GPT 4.1-mini1"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.rerankerCohere",
+      "typeVersion": 1,
+      "position": [
+        448,
+        144
+      ],
+      "id": "9bfaa110-142e-4076-9764-e29c83cc0f1c",
+      "name": "Reranker Cohere1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        144
+      ],
+      "id": "6554542f-c6e0-49e7-a6ea-f5aa454c4798",
+      "name": "Embeddings OpenAI2"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=Bạn là một AI chuyên phân tích câu hỏi của người dùng để xác định họ đang hỏi về \"luật số mấy\" trong bộ luật boxing.\n\nTrả về kết quả **duy nhất dưới dạng JSON**, không mô tả gì thêm, ví dụ:\n\n{\n  \"metadata\": {\n    \"LuatSo\": 10\n  }\n}\n\nNếu người dùng không nhắc đến số luật nào, trả về:\n\n{\n  \"metadata\": {\n    \"LuatSo\": null\n  }\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        -192
+      ],
+      "id": "0170bc8f-1095-4067-afb2-91c0f0c21296",
+      "name": "Metadata Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').item.json.chatInput }}",
+        "options": {
+          "systemMessage": "=Bạn là AI chuyên trả lời các câu hỏi về luật boxing bằng cách truy xuất dữ liệu từ Vector Store (Supabase). Bạn sẽ nhận được số luật cần tìm (ví dụ: 7) và phải trả lại đúng nội dung văn bản đã được lưu trong hệ thống – không được suy luận hay bịa ra.\n\nNếu không tìm thấy luật có số tương ứng (ví dụ: không có \"LuatSo = 7\"), hãy nói rõ là không tìm thấy nội dung.\n\nHãy luôn trả lời đúng nội dung gốc từ tài liệu, ví dụ:\n\"Luật số 7. Không được đánh sau gáy...\"\n\nNếu người dùng không hỏi số cụ thể, bạn có thể dùng semantic search thông thường để tìm nội dung liên quan.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        176,
+        -192
+      ],
+      "id": "3b6b5666-fcc9-4756-aecc-a92980edbe45",
+      "name": "RAG Agent 2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.output;\nconst parsed = JSON.parse(raw);\nreturn parsed;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        -192
+      ],
+      "id": "ae2811aa-4cf2-4e18-9563-bd5cdd68af8f",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "content": "# Vectorize Document w/ Metadata",
+        "height": 608,
+        "width": 1360
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        -944
+      ],
+      "id": "389fcd41-b277-420c-bc07-d5c736ecaea3",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# RAG Agent\n",
+        "height": 608,
+        "width": 640
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1440,
+        -944
+      ],
+      "id": "dbbdf67e-4196-487d-9c23-04dccfcc7e85",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.rerankerCohere",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        -496
+      ],
+      "id": "ce6a33d9-ba88-4aec-be55-45ca8654b76c",
+      "name": "Reranker Cohere"
+    },
+    {
+      "parameters": {
+        "content": "# Metadata Agent\n",
+        "height": 560,
+        "width": 528,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        -272
+      ],
+      "id": "a9f65cdd-9895-4825-a95f-68fb53f48c57",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# RAG Agent\n",
+        "height": 560,
+        "width": 640,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        -272
+      ],
+      "id": "aebef80a-7e68-4885-a48d-94b76ba2c02f",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Metadata Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader1",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store2": {
+      "ai_tool": [
+        [
+          {
+            "node": "RAG Agent 2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT 4.1-mini1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Metadata Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "RAG Agent 2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reranker Cohere1": {
+      "ai_reranker": [
+        [
+          {
+            "node": "Supabase Vector Store2",
+            "type": "ai_reranker",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Metadata Agent": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "RAG Agent 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reranker Cohere": {
+      "ai_reranker": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_reranker",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1358f266-a68b-4cd4-baab-2687d3b9e131",
+  "meta": {
+    "instanceId": "159c81b9c1004d6258d17ba97214c6a70efa17dd9e5e89e00316f24bf562a326"
+  },
+  "id": "Zcl8b2Qy6Z6ihFIK",
+  "tags": []
+}
